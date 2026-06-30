@@ -1,4 +1,3 @@
-// Configura o módulo de biblioteca Android que contém a tela de chat médico.
 plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
@@ -12,7 +11,6 @@ android {
 
     defaultConfig {
         minSdk = 24
-        consumerProguardFiles("consumer-rules.pro")
     }
 
     buildFeatures {
@@ -30,21 +28,15 @@ android {
 }
 
 dependencies {
-    val composeBom = platform("androidx.compose:compose-bom:2024.12.01")
-    implementation(composeBom)
-    androidTestImplementation(composeBom)
+    val pacoteCompose = platform("androidx.compose:compose-bom:2024.12.01")
+    implementation(pacoteCompose)
 
-    implementation("androidx.activity:activity-compose:1.9.3")
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.material3:material3")
-    implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.ui:ui-tooling-preview")
-    debugImplementation("androidx.compose.ui:ui-tooling")
 
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
-    implementation("androidx.navigation:navigation-compose:2.8.5")
 
     implementation("io.ktor:ktor-client-okhttp:3.0.3")
     implementation("io.ktor:ktor-client-content-negotiation:3.0.3")

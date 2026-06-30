@@ -1,4 +1,3 @@
-// Configura o backend Ktor que recebe mensagens do Android e chama o Ollama com MedGemma.
 plugins {
     application
     id("org.jetbrains.kotlin.jvm")
@@ -6,7 +5,7 @@ plugins {
 }
 
 application {
-    mainClass.set("ApplicationKt")
+    mainClass.set("ServidorKt")
 }
 
 kotlin {

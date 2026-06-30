@@ -1,4 +1,3 @@
-// Configura o app demo usado apenas para testar a tela de chat no Android Studio.
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -34,8 +33,8 @@ android {
 dependencies {
     implementation(project(":chatmedico"))
 
-    val composeBom = platform("androidx.compose:compose-bom:2024.12.01")
-    implementation(composeBom)
+    val pacoteCompose = platform("androidx.compose:compose-bom:2024.12.01")
+    implementation(pacoteCompose)
 
     implementation("androidx.activity:activity-compose:1.9.3")
     implementation("androidx.compose.material3:material3")

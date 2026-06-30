@@ -1,8 +1,0 @@
-<!-- Define o tema visual básico do app demo usado nos testes. -->
-<resources>
-    <style name="Theme.AdaChatDemo" parent="android:style/Theme.Material.Light.NoActionBar">
-        <item name="android:windowLightStatusBar">true</item>
-        <item name="android:navigationBarColor">#F7FAF8</item>
-        <item name="android:statusBarColor">#F7FAF8</item>
-    </style>
-</resources>
