@@ -63,7 +63,7 @@ TelaChatMedicoComRepositorio(
 
 ## Testar no Android Studio
 
-Para rodar sem backend, selecione a configuracao `appdemo` no Android Studio e clique em Run. O modulo demo usa um repositorio simulado somente para testar a interface.
+Para rodar sem backend, selecione a configuracao `appdemo` no Android Studio e clique em Run. O modulo demo usa um repositorio simulado somente para testar a interface; ele nao usa inteligencia real e responde apenas alguns exemplos predefinidos.
 
 Para testar com o backend local, abra `appdemo/src/main/kotlin/com/ada/chatmedico/demo/MainActivity.kt` e altere `USAR_BACKEND_LOCAL` para `true`.
 
