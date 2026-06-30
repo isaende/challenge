@@ -1,3 +1,6 @@
+// passa para analisar se a IA pode responder a pergunta, 
+// primeiro classifica se é caso de urgencia, se ele deve recusar ou der algum erro
+
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
