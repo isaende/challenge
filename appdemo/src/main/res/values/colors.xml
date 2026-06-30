@@ -1,0 +1,4 @@
+<!-- Guarda cores simples usadas pelos recursos visuais do app demo. -->
+<resources>
+    <color name="ic_launcher_background">#007A4D</color>
+</resources>
