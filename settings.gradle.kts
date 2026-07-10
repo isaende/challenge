@@ -14,6 +14,5 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "ChallengeChatMedico"
-include(":chatmedico")
 include(":appdemo")
 include(":backend")

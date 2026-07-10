@@ -1,4 +1,4 @@
-package com.ada.chatmedico
+package chat_medico
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
@@ -29,6 +29,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -53,6 +54,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.ada.chatmedico.demo.R
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.okhttp.OkHttp
@@ -243,14 +245,16 @@ private class FabricaModeloVisao(
 
 @Composable
 fun TelaChatMedico(
-    repositorio: RepositorioChatMedico = criarRepositorioChatMedico()
+    repositorio: RepositorioChatMedico = criarRepositorioChatMedico(),
+    aoVoltar: () -> Unit = {}
 ) {
     val modelo: ModeloVisaoChatMedico = viewModel(factory = FabricaModeloVisao(repositorio))
     val estado by modelo.estado.collectAsStateWithLifecycle()
     ConteudoChatMedico(
         estado = estado,
         aoAlterarTexto = modelo::alterarTextoDigitado,
-        aoEnviar = modelo::enviarMensagem
+        aoEnviar = modelo::enviarMensagem,
+        aoVoltar = aoVoltar
     )
 }
 
@@ -259,7 +263,8 @@ fun TelaChatMedico(
 private fun ConteudoChatMedico(
     estado: EstadoChatMedico,
     aoAlterarTexto: (String) -> Unit,
-    aoEnviar: () -> Unit
+    aoEnviar: () -> Unit,
+    aoVoltar: () -> Unit
 ) {
     val lista = rememberLazyListState()
     LaunchedEffect(estado.mensagens.size) {
@@ -272,6 +277,11 @@ private fun ConteudoChatMedico(
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("Fale com a Ada", fontWeight = FontWeight.SemiBold) },
+                navigationIcon = {
+                    IconButton(onClick = aoVoltar) {
+                        Text("<", color = Color(0xFF17211C), fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                    }
+                },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color(0xFFF7FAF8))
             )
         },
