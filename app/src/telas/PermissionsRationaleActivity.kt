@@ -1,3 +1,5 @@
+// Explicação do porque os dados são usados e a importancia de usar eles
+
 package home_page
 
 import android.app.Activity
@@ -11,7 +13,7 @@ class PermissionsRationaleActivity : Activity() {
         super.onCreate(savedInstanceState)
 
         val texto = TextView(this).apply {
-            text = "A Ada usa dados do Health Connect apenas para mostrar seu resumo de saude, como passos, sono e batimentos cardiacos. Esses dados nao substituem avaliacao medica e so sao lidos quando voce concede permissao."
+            text = "A Ada usa dados do Health Connect apenas para mostrar seu resumo de saude, como passos, sono e batimentos cardíacos. Esses dados não substituem avaliação médica e só são lidos quando voce concede permissão."
             textSize = 18f
             setPadding(48, 48, 48, 48)
             gravity = Gravity.START

@@ -15,6 +15,7 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 
+// ? significa que esses valores podem ser nulos
 data class DadosSaude(
     val passos: Long? = null,
     val sonoMinutos: Long? = null,
@@ -24,18 +25,21 @@ data class DadosSaude(
 class RepositorioSaudeHealthConnect(
     private val context: Context
 ) {
+    // otimização, so cria o client quando for usar
     private val cliente: HealthConnectClient by lazy {
         HealthConnectClient.getOrCreate(context)
     }
-
+    // pergunta ao celular se o pacote do Health Connect está instalado e qual a versão dele.
     fun statusSdk(): Int {
         return HealthConnectClient.getSdkStatus(context)
     }
 
+    // verifica se o healthconnect esta disponivel
     fun healthConnectDisponivel(): Boolean {
         return statusSdk() == HealthConnectClient.SDK_AVAILABLE
     }
 
+    // verifica se tem permissoes
     suspend fun temPermissoes(): Boolean {
         return cliente.permissionController
             .getGrantedPermissions()
@@ -96,6 +100,7 @@ class RepositorioSaudeHealthConnect(
             ?.toInt()
     }
 
+    // permissoes necessárias para acessar os dados
     companion object {
         val PERMISSOES = setOf(
             HealthPermission.getReadPermission(StepsRecord::class),
