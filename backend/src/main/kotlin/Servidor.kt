@@ -109,8 +109,14 @@ private object ClienteOllama {
                 )
             )
         }.body<RespostaOllama>()
-        return resposta.mensagem?.conteudo.orEmpty().trim()
+        return resposta.mensagem?.conteudo.orEmpty().somenteRespostaFinal()
     }
+}
+
+private fun String.somenteRespostaFinal(): String {
+    return substringAfterLast("<unused95>", this)
+        .replace("<unused\\d+>".toRegex(), "")
+        .trim()
 }
 
 @Serializable
