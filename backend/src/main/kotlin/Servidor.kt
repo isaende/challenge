@@ -28,6 +28,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
+// aponta para o servidor ollama que roda o modelo de IA
 private const val MODELO_OLLAMA = "medgemma1.5:4b"
 private const val URL_OLLAMA = "http://localhost:11434/api/chat"
 private const val LIMITE_MENSAGEM = 2000
