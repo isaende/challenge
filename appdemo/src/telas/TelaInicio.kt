@@ -79,6 +79,10 @@ data class ItemMenuInicio(
 fun TelaInicio(
     aoAbrirChatMedico: () -> Unit,
     aoAbrirExames: () -> Unit = {},
+    aoAbrirMedicamentos: () -> Unit = {},
+    aoAbrirEmergencia: () -> Unit = {},
+    aoAbrirHidratacao: () -> Unit = {},
+    aoAbrirPassos: () -> Unit = {},
     dadosSaude: DadosSaude = DadosSaude(),
     statusSaude: String = "Conecte o Health Connect",
     aoConectarSaude: () -> Unit = {},
@@ -101,6 +105,10 @@ fun TelaInicio(
             CorpoInicio(
                 aoAbrirChatMedico = aoAbrirChatMedico,
                 aoAbrirExames = aoAbrirExames,
+                aoAbrirMedicamentos = aoAbrirMedicamentos,
+                aoAbrirEmergencia = aoAbrirEmergencia,
+                aoAbrirHidratacao = aoAbrirHidratacao,
+                aoAbrirPassos = aoAbrirPassos,
                 dadosSaude = dadosSaude,
                 statusSaude = statusSaude,
                 aoConectarSaude = aoConectarSaude,
@@ -167,6 +175,10 @@ private fun CabecalhoInicio() {
 private fun CorpoInicio(
     aoAbrirChatMedico: () -> Unit,
     aoAbrirExames: () -> Unit,
+    aoAbrirMedicamentos: () -> Unit,
+    aoAbrirEmergencia: () -> Unit,
+    aoAbrirHidratacao: () -> Unit,
+    aoAbrirPassos: () -> Unit,
     dadosSaude: DadosSaude,
     statusSaude: String,
     aoConectarSaude: () -> Unit,
@@ -188,7 +200,13 @@ private fun CorpoInicio(
             textoBotaoSaude = textoBotaoSaude
         )
         CartaoAdaAi(aoAbrirChatMedico)
-        BlocoAcoesRapidas(aoAbrirExames = aoAbrirExames)
+        BlocoAcoesRapidas(
+            aoAbrirExames = aoAbrirExames,
+            aoAbrirMedicamentos = aoAbrirMedicamentos,
+            aoAbrirEmergencia = aoAbrirEmergencia,
+            aoAbrirHidratacao = aoAbrirHidratacao,
+            aoAbrirPassos = aoAbrirPassos
+        )
     }
 }
 
@@ -385,7 +403,7 @@ private fun CartaoAdaAi(aoAbrirChatMedico: () -> Unit) {
             }
 
             Image(
-                painter = painterResource(R.drawable.ada_onca),
+                painter = painterResource(R.drawable.onca),
                 contentDescription = "Ada AI",
                 modifier = Modifier
                     .size(104.dp)
@@ -399,12 +417,20 @@ private fun CartaoAdaAi(aoAbrirChatMedico: () -> Unit) {
 }
 
 @Composable
-private fun BlocoAcoesRapidas(aoAbrirExames: () -> Unit) {
+private fun BlocoAcoesRapidas(
+    aoAbrirExames: () -> Unit,
+    aoAbrirMedicamentos: () -> Unit,
+    aoAbrirEmergencia: () -> Unit,
+    aoAbrirHidratacao: () -> Unit,
+    aoAbrirPassos: () -> Unit
+) {
     val acoes = listOf(
         ItemAcaoRapida("Telemedicina", R.drawable.buy_online, VerdePrincipal),
         ItemAcaoRapida("Exames", R.drawable.doctor_notes, Color(0xFF1F7A8C), aoAbrirExames),
-        ItemAcaoRapida("Medicamentos", R.drawable.drugs, Color(0xFF2F7D32)),
-        ItemAcaoRapida("Emergencia", R.drawable.medicine, Color(0xFFD32F2F))
+        ItemAcaoRapida("Medicamentos", R.drawable.drugs, Color(0xFF2F7D32), aoAbrirMedicamentos),
+        ItemAcaoRapida("Emergencia", R.drawable.medicine, Color(0xFFD32F2F), aoAbrirEmergencia),
+        ItemAcaoRapida("Hidratação", R.drawable.agua, Color(0xFF1E9FD1), aoAbrirHidratacao),
+        ItemAcaoRapida("Passos", R.drawable.relatorio_treino, VerdePrincipal, aoAbrirPassos)
     )
 
     Column {
@@ -427,12 +453,19 @@ private fun BlocoAcoesRapidas(aoAbrirExames: () -> Unit) {
             )
         }
         Spacer(Modifier.height(8.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            acoes.forEach { acao ->
-                CartaoAcaoRapida(
-                    acao = acao,
-                    modifier = Modifier.weight(1f)
-                )
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            acoes.chunked(4).forEach { linha ->
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    linha.forEach { acao ->
+                        CartaoAcaoRapida(
+                            acao = acao,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    repeat(4 - linha.size) {
+                        Spacer(Modifier.weight(1f))
+                    }
+                }
             }
         }
     }

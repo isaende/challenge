@@ -89,8 +89,8 @@ private object ClienteOllama {
         }
         install(HttpTimeout) {
             connectTimeoutMillis = 10_000
-            requestTimeoutMillis = 60_000
-            socketTimeoutMillis = 60_000
+            requestTimeoutMillis = 180_000
+            socketTimeoutMillis = 180_000
         }
     }
 

@@ -3,6 +3,7 @@
     <uses-permission android:name="android.permission.health.READ_HEART_RATE" />
     <uses-permission android:name="android.permission.health.READ_SLEEP" />
     <uses-permission android:name="android.permission.health.READ_STEPS" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <queries>
         <package android:name="com.google.android.apps.healthdata" />
@@ -10,9 +11,9 @@
 
     <application
         android:allowBackup="false"
-        android:icon="@drawable/logo"
+        android:icon="@mipmap/ic_launcher"
         android:label="Ada Chat Demo"
-        android:roundIcon="@drawable/logo"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:usesCleartextTraffic="true"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
@@ -51,5 +52,8 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/arquivos_exames" />
         </provider>
+        <receiver
+            android:name="home_page.LembreteMedicamentoReceiver"
+            android:exported="false" />
     </application>
 </manifest>

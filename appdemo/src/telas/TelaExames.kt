@@ -331,7 +331,7 @@ private fun CartaoAvisoExames() {
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Image(
-                    painter = painterResource(R.drawable.onca1),
+                    painter = painterResource(R.drawable.onca_joia),
                     contentDescription = "Ada",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier

@@ -1,0 +1,359 @@
+package home_page
+
+import android.content.Context
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.ada.chatmedico.demo.R
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import kotlinx.coroutines.delay
+
+private val VerdeHidratacao = Color(0xFF007A4D)
+private val AzulHidratacao = Color(0xFF269EC4)
+private val FundoHidratacao = Color(0xFFF7FAF8)
+private const val MetaDiariaMl = 2500
+
+private data class RegistroAgua(val horario: String, val quantidadeMl: Int)
+
+@Composable
+fun TelaHidratacao(aoVoltar: () -> Unit, modifier: Modifier = Modifier) {
+    val contexto = LocalContext.current
+    var registros by remember { mutableStateOf(carregarRegistros(contexto)) }
+    var dataDosRegistros by remember { mutableStateOf(LocalDate.now()) }
+    var mostrarValorManual by remember { mutableStateOf(false) }
+    val totalMl = registros.sumOf { it.quantidadeMl }
+    val progresso = (totalMl.toFloat() / MetaDiariaMl).coerceIn(0f, 1f)
+
+    fun adicionarAgua(quantidadeMl: Int) {
+        if (quantidadeMl <= 0) return
+        val hoje = LocalDate.now()
+        val novoRegistro = RegistroAgua(
+            LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")),
+            quantidadeMl
+        )
+        registros = if (dataDosRegistros == hoje) registros + novoRegistro else listOf(novoRegistro)
+        dataDosRegistros = hoje
+        salvarRegistros(contexto, registros)
+    }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(30_000)
+            val hoje = LocalDate.now()
+            if (dataDosRegistros != hoje) {
+                registros = emptyList()
+                dataDosRegistros = hoje
+                salvarRegistros(contexto, emptyList())
+            }
+        }
+    }
+
+    Scaffold(
+        modifier = modifier.fillMaxSize(),
+        containerColor = FundoHidratacao,
+        bottomBar = { BarraInferiorHidratacao(aoVoltar) }
+    ) { espacamento ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(espacamento)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp)
+        ) {
+            CabecalhoHidratacao(aoVoltar)
+            CartaoDestaqueHidratacao()
+            IndicadorHidratacao(totalMl, progresso)
+            BotoesQuantidade(
+                aoAdicionar = ::adicionarAgua,
+                aoDigitarOutro = { mostrarValorManual = true }
+            )
+            HistoricoHidratacao(registros)
+            DicaHidratacao()
+            Spacer(Modifier.height(16.dp))
+        }
+    }
+
+    if (mostrarValorManual) {
+        DialogoValorManual(
+            aoFechar = { mostrarValorManual = false },
+            aoAdicionar = {
+                adicionarAgua(it)
+                mostrarValorManual = false
+            }
+        )
+    }
+}
+
+@Composable
+private fun CabecalhoHidratacao(aoVoltar: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .statusBarsPadding()
+            .height(58.dp)
+    ) {
+        Surface(
+            modifier = Modifier.size(38.dp).align(Alignment.CenterStart).clickable(onClick = aoVoltar),
+            shape = CircleShape,
+            color = Color(0xFFEAF2ED)
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Text("‹", color = VerdeHidratacao, fontSize = 32.sp, lineHeight = 32.sp)
+            }
+        }
+        Text(
+            "HIDRATAÇÃO",
+            modifier = Modifier.align(Alignment.Center),
+            color = VerdeHidratacao,
+            fontWeight = FontWeight.Bold,
+            fontSize = 16.sp
+        )
+        Text("♢", modifier = Modifier.align(Alignment.CenterEnd), color = VerdeHidratacao, fontSize = 23.sp)
+    }
+}
+
+@Composable
+private fun CartaoDestaqueHidratacao() {
+    Surface(
+        modifier = Modifier.fillMaxWidth().height(116.dp),
+        shape = RoundedCornerShape(14.dp),
+        color = Color(0xFFEAF3ED)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(
+                modifier = Modifier.weight(1f).padding(start = 16.dp, top = 12.dp, bottom = 12.dp),
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text("Hidratação é\nenergia, foco e\nresultados! 💧", color = Color(0xFF285D48), fontWeight = FontWeight.Bold, fontSize = 15.sp, lineHeight = 19.sp)
+                Text("Seu corpo agradece\ncada gole.", color = Color(0xFF587064), fontSize = 10.sp, lineHeight = 13.sp, modifier = Modifier.padding(top = 3.dp))
+            }
+            Image(
+                painter = painterResource(R.drawable.onca_comprimido),
+                contentDescription = "Mascote Ada",
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.width(146.dp).height(112.dp).padding(end = 8.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun IndicadorHidratacao(totalMl: Int, progresso: Float) {
+    Box(modifier = Modifier.fillMaxWidth().height(180.dp), contentAlignment = Alignment.Center) {
+        Canvas(Modifier.size(146.dp)) {
+            val largura = 8.dp.toPx()
+            drawArc(Color(0xFFDDEBE5), -90f, 360f, false, style = Stroke(largura, cap = StrokeCap.Round))
+            drawArc(
+                VerdeHidratacao,
+                -90f,
+                360f * progresso,
+                false,
+                topLeft = Offset(largura / 2, largura / 2),
+                size = Size(size.width - largura, size.height - largura),
+                style = Stroke(largura, cap = StrokeCap.Round)
+            )
+        }
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Image(painterResource(R.drawable.agua), "Gota de água", Modifier.size(32.dp))
+            Text(formatarLitros(totalMl), color = Color(0xFF17211C), fontWeight = FontWeight.Bold, fontSize = 25.sp)
+            Text("de 2,5 L", color = Color(0xFF61706A), fontSize = 12.sp)
+            Text("${(progresso * 100).toInt()}%", color = VerdeHidratacao, fontWeight = FontWeight.Bold, fontSize = 13.sp, modifier = Modifier.padding(top = 4.dp))
+        }
+    }
+}
+
+@Composable
+private fun BotoesQuantidade(aoAdicionar: (Int) -> Unit, aoDigitarOutro: () -> Unit) {
+    val opcoes = listOf(
+        Triple("+250 ml", R.drawable.copo_de_agua, 250),
+        Triple("+500 ml", R.drawable.garrafa_de_agua, 500),
+        Triple("+1 L", R.drawable.garrafa_de_agua, 1000)
+    )
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+        opcoes.forEach { (texto, icone, quantidade) ->
+            BotaoQuantidade(texto, icone, Modifier.weight(1f)) { aoAdicionar(quantidade) }
+        }
+        Surface(
+            modifier = Modifier.weight(1f).height(42.dp).clickable(onClick = aoDigitarOutro),
+            shape = RoundedCornerShape(22.dp),
+            color = Color.White,
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFDCE7E2))
+        ) {
+            Box(contentAlignment = Alignment.Center) { Text("◉ Outro", fontSize = 10.sp, fontWeight = FontWeight.SemiBold) }
+        }
+    }
+}
+
+@Composable
+private fun BotaoQuantidade(texto: String, icone: Int, modifier: Modifier, aoClicar: () -> Unit) {
+    Surface(
+        modifier = modifier.height(42.dp).clickable(onClick = aoClicar),
+        shape = RoundedCornerShape(22.dp),
+        color = Color.White,
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFDCE7E2))
+    ) {
+        Row(horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+            Image(painterResource(icone), texto, Modifier.size(18.dp))
+            Spacer(Modifier.width(3.dp))
+            Text(texto, fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
+        }
+    }
+}
+
+@Composable
+private fun HistoricoHidratacao(registros: List<RegistroAgua>) {
+    Surface(Modifier.fillMaxWidth().padding(top = 14.dp), RoundedCornerShape(12.dp), color = Color.White, shadowElevation = 1.dp) {
+        Column(Modifier.padding(14.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("▣  Histórico de hoje", fontWeight = FontWeight.Bold, fontSize = 12.sp, modifier = Modifier.weight(1f))
+                Text("Meta: 2,5 L", color = VerdeHidratacao, fontWeight = FontWeight.SemiBold, fontSize = 10.sp)
+            }
+            if (registros.isEmpty()) {
+                Text("Nenhum copo registrado ainda.", color = Color(0xFF75827C), fontSize = 11.sp, modifier = Modifier.padding(vertical = 18.dp).align(Alignment.CenterHorizontally))
+            } else {
+                registros.asReversed().forEach { registro ->
+                    Row(Modifier.fillMaxWidth().padding(top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Image(painterResource(R.drawable.copo_de_agua), null, Modifier.size(18.dp))
+                        Text(registro.horario, color = Color(0xFF6B7A73), fontSize = 11.sp, modifier = Modifier.padding(start = 8.dp).width(48.dp))
+                        Text(formatarQuantidade(registro.quantidadeMl), fontSize = 11.sp, modifier = Modifier.weight(1f))
+                        Box(Modifier.size(16.dp).clip(CircleShape).background(Color(0xFF59A65C)), contentAlignment = Alignment.Center) {
+                            Text("✓", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DicaHidratacao() {
+    Surface(Modifier.fillMaxWidth().padding(top = 12.dp), RoundedCornerShape(12.dp), color = Color(0xFFF0F4F1)) {
+        Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Image(painterResource(R.drawable.onca_comprimido), "Ada AI", Modifier.size(48.dp))
+            Column(Modifier.padding(start = 10.dp).weight(1f)) {
+                Text("Dica da Ada AI", color = VerdeHidratacao, fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                Text("Você treina pesado! 💪 Mantenha sua hidratação em dia para melhorar sua performance e recuperação.", color = Color(0xFF42534B), fontSize = 9.sp, lineHeight = 12.sp)
+            }
+            Text("›", fontSize = 24.sp, color = Color(0xFF42534B))
+        }
+    }
+}
+
+@Composable
+private fun DialogoValorManual(aoFechar: () -> Unit, aoAdicionar: (Int) -> Unit) {
+    var texto by remember { mutableStateOf("") }
+    val valor = texto.toIntOrNull()
+    AlertDialog(
+        onDismissRequest = aoFechar,
+        title = { Text("Adicionar água") },
+        text = {
+            OutlinedTextField(
+                value = texto,
+                onValueChange = { novo -> texto = novo.filter(Char::isDigit).take(5) },
+                label = { Text("Quantidade em ml") },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number)
+            )
+        },
+        confirmButton = {
+            Button(onClick = { valor?.let(aoAdicionar) }, enabled = valor != null && valor > 0, colors = ButtonDefaults.buttonColors(containerColor = VerdeHidratacao)) {
+                Text("Adicionar")
+            }
+        },
+        dismissButton = { TextButton(onClick = aoFechar) { Text("Cancelar") } }
+    )
+}
+
+@Composable
+private fun BarraInferiorHidratacao(aoVoltar: () -> Unit) {
+    Surface(Modifier.fillMaxWidth().navigationBarsPadding(), color = Color.White, shadowElevation = 6.dp) {
+        Row(Modifier.fillMaxWidth().height(62.dp), horizontalArrangement = Arrangement.SpaceAround, verticalAlignment = Alignment.CenterVertically) {
+            listOf("⌂" to "Início", "⌁" to "Monitorar", "+" to "Adicionar", "▤" to "Exames", "●" to "Perfil").forEachIndexed { indice, item ->
+                Column(
+                    Modifier.width(58.dp).clickable(enabled = indice == 0, onClick = aoVoltar),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(item.first, color = if (indice == 1) VerdeHidratacao else Color(0xFF61706A), fontSize = if (indice == 2) 25.sp else 20.sp, fontWeight = FontWeight.Bold)
+                    Text(item.second, color = if (indice == 1) VerdeHidratacao else Color(0xFF61706A), fontSize = 9.sp)
+                }
+            }
+        }
+    }
+}
+
+private fun formatarLitros(ml: Int): String = String.format(java.util.Locale.forLanguageTag("pt-BR"), "%.2f L", ml / 1000.0).replace(",00", "")
+private fun formatarQuantidade(ml: Int): String = if (ml >= 1000 && ml % 1000 == 0) "${ml / 1000} L" else "$ml ml"
+
+private fun carregarRegistros(contexto: Context): List<RegistroAgua> {
+    val preferencias = contexto.getSharedPreferences("hidratacao", Context.MODE_PRIVATE)
+    val hoje = LocalDate.now().toString()
+    if (preferencias.getString("data", "") != hoje) {
+        preferencias.edit().clear().putString("data", hoje).apply()
+        return emptyList()
+    }
+    return preferencias.getString("registros", "").orEmpty()
+        .split(";")
+        .mapNotNull { item ->
+            val partes = item.split(",")
+            if (partes.size == 2) partes[1].toIntOrNull()?.let { RegistroAgua(partes[0], it) } else null
+        }
+}
+
+private fun salvarRegistros(contexto: Context, registros: List<RegistroAgua>) {
+    contexto.getSharedPreferences("hidratacao", Context.MODE_PRIVATE).edit()
+        .putString("data", LocalDate.now().toString())
+        .putString("registros", registros.joinToString(";") { "${it.horario},${it.quantidadeMl}" })
+        .apply()
+}

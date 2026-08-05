@@ -75,7 +75,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlin.coroutines.cancellation.CancellationException
 
-const val URL_BASE_SERVIDOR_CHAT = "https://meu-backend.com"
+const val URL_BASE_SERVIDOR_CHAT = "http://10.0.2.2:8080"
 private const val CAMINHO_CHAT_MEDICO = "/api/chat-medico"
 private const val LIMITE_MENSAGEM = 2000
 private const val TEXTO_AVISO = "Este chat fornece informações educativas e não substitui avaliação de um profissional de saúde."
@@ -157,8 +157,8 @@ private fun criarClienteHttp(): HttpClient {
         }
         install(HttpTimeout) {
             connectTimeoutMillis = 15_000
-            requestTimeoutMillis = 30_000
-            socketTimeoutMillis = 30_000
+            requestTimeoutMillis = 180_000
+            socketTimeoutMillis = 180_000
         }
     }
 }
@@ -342,7 +342,7 @@ private fun Cabecalho() {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Image(
-            painter = painterResource(R.drawable.ada_onca),
+            painter = painterResource(R.drawable.onca),
             contentDescription = "Ada",
             modifier = Modifier
                 .size(70.dp)

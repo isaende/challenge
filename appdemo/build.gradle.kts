@@ -5,6 +5,20 @@ plugins {
     id("org.jetbrains.kotlin.plugin.serialization")
 }
 
+val imagensDrawableGeradas = layout.buildDirectory.dir("generated/res/images/main").get().asFile
+val sincronizarImagensDrawable by tasks.registering(Sync::class) {
+    from("src/images") {
+        include("**/*.png", "**/*.jpg", "**/*.jpeg", "**/*.webp")
+        exclude("logo.png")
+        exclude { detalhe -> detalhe.file.length() == 0L }
+        eachFile {
+            path = name.lowercase().replace("-", "_")
+        }
+        includeEmptyDirs = false
+    }
+    into(imagensDrawableGeradas.resolve("drawable"))
+}
+
 android {
     namespace = "com.ada.chatmedico.demo"
     compileSdk {
@@ -28,7 +42,7 @@ android {
     sourceSets {
         getByName("main") {
             manifest.srcFile("src/AndroidManifest.xml")
-            res.srcDirs("src/res")
+            res.srcDirs("src/res", imagensDrawableGeradas)
             java.srcDirs("src/chat_medico", "src/telas")
         }
     }
@@ -41,6 +55,10 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+}
+
+tasks.named("preBuild") {
+    dependsOn(sincronizarImagensDrawable)
 }
 
 dependencies {
