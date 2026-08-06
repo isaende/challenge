@@ -82,7 +82,7 @@ fun TelaInicio(
     aoAbrirMedicamentos: () -> Unit = {},
     aoAbrirEmergencia: () -> Unit = {},
     aoAbrirHidratacao: () -> Unit = {},
-    aoAbrirPassos: () -> Unit = {},
+    aoAbrirExercicios: () -> Unit = {},
     dadosSaude: DadosSaude = DadosSaude(),
     statusSaude: String = "Conecte o Health Connect",
     aoConectarSaude: () -> Unit = {},
@@ -108,7 +108,7 @@ fun TelaInicio(
                 aoAbrirMedicamentos = aoAbrirMedicamentos,
                 aoAbrirEmergencia = aoAbrirEmergencia,
                 aoAbrirHidratacao = aoAbrirHidratacao,
-                aoAbrirPassos = aoAbrirPassos,
+                aoAbrirExercicios = aoAbrirExercicios,
                 dadosSaude = dadosSaude,
                 statusSaude = statusSaude,
                 aoConectarSaude = aoConectarSaude,
@@ -178,7 +178,7 @@ private fun CorpoInicio(
     aoAbrirMedicamentos: () -> Unit,
     aoAbrirEmergencia: () -> Unit,
     aoAbrirHidratacao: () -> Unit,
-    aoAbrirPassos: () -> Unit,
+    aoAbrirExercicios: () -> Unit,
     dadosSaude: DadosSaude,
     statusSaude: String,
     aoConectarSaude: () -> Unit,
@@ -205,7 +205,7 @@ private fun CorpoInicio(
             aoAbrirMedicamentos = aoAbrirMedicamentos,
             aoAbrirEmergencia = aoAbrirEmergencia,
             aoAbrirHidratacao = aoAbrirHidratacao,
-            aoAbrirPassos = aoAbrirPassos
+            aoAbrirExercicios = aoAbrirExercicios
         )
     }
 }
@@ -422,7 +422,7 @@ private fun BlocoAcoesRapidas(
     aoAbrirMedicamentos: () -> Unit,
     aoAbrirEmergencia: () -> Unit,
     aoAbrirHidratacao: () -> Unit,
-    aoAbrirPassos: () -> Unit
+    aoAbrirExercicios: () -> Unit
 ) {
     val acoes = listOf(
         ItemAcaoRapida("Telemedicina", R.drawable.buy_online, VerdePrincipal),
@@ -430,7 +430,7 @@ private fun BlocoAcoesRapidas(
         ItemAcaoRapida("Medicamentos", R.drawable.drugs, Color(0xFF2F7D32), aoAbrirMedicamentos),
         ItemAcaoRapida("Emergencia", R.drawable.medicine, Color(0xFFD32F2F), aoAbrirEmergencia),
         ItemAcaoRapida("Hidratação", R.drawable.agua, Color(0xFF1E9FD1), aoAbrirHidratacao),
-        ItemAcaoRapida("Passos", R.drawable.relatorio_treino, VerdePrincipal, aoAbrirPassos)
+        ItemAcaoRapida("Exercícios", R.drawable.relatorio_treino, VerdePrincipal, aoAbrirExercicios)
     )
 
     Column {

@@ -1,6 +1,5 @@
 package home_page
 
-import android.widget.Toast
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -36,7 +35,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -47,21 +45,21 @@ import java.text.NumberFormat
 import java.util.Locale
 
 private const val MetaPassos = 10_000L
-private val VerdePassosTela = Color(0xFF006C43)
-private val TrilhoPassos = Color(0xFFDCE7E1)
-private val FundoPassos = Color(0xFFF7FAF8)
-private val TextoPassos = Color(0xFF17211C)
-private val TextoPassosSecundario = Color(0xFF61706A)
+private val VerdeExercicios = Color(0xFF006C43)
+private val TrilhoExercicios = Color(0xFFDCE7E1)
+private val FundoExercicios = Color(0xFFF7FAF8)
+private val TextoExercicios = Color(0xFF17211C)
+private val TextoExerciciosSecundario = Color(0xFF61706A)
 
 @Composable
-fun TelaPassos(
+fun TelaExercicios(
     passosHoje: Long,
     carregando: Boolean,
     aoAtualizar: () -> Unit,
+    aoIniciarTreino: () -> Unit,
     aoVoltar: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val contexto = LocalContext.current
     val progresso = (passosHoje.toFloat() / MetaPassos).coerceIn(0f, 1f)
     val passosRestantes = (MetaPassos - passosHoje).coerceAtLeast(0)
 
@@ -69,8 +67,8 @@ fun TelaPassos(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        containerColor = FundoPassos,
-        bottomBar = { BarraInferiorPassos(aoVoltar) }
+        containerColor = FundoExercicios,
+        bottomBar = { BarraInferiorExercicios(aoVoltar) }
     ) { espacamento ->
         Column(
             modifier = Modifier
@@ -79,11 +77,11 @@ fun TelaPassos(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp)
         ) {
-            CabecalhoPassos(aoVoltar)
+            CabecalhoExercicios(aoVoltar)
             Text(
                 text = "Atividade física",
                 modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
-                color = TextoPassos,
+                color = TextoExercicios,
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp,
                 textAlign = TextAlign.Center
@@ -91,17 +89,15 @@ fun TelaPassos(
             SeletorHoje()
             IndicadorPassos(passosHoje, progresso, carregando)
             ResumoPassos(passosRestantes, progresso)
-            BotaoTreinosPersonalizados {
-                Toast.makeText(contexto, "Treinos personalizados em breve", Toast.LENGTH_SHORT).show()
-            }
-            DicaAdaPassos()
+            BotaoIniciarTreino(aoIniciarTreino)
+            DicaAdaExercicios()
             Spacer(Modifier.height(16.dp))
         }
     }
 }
 
 @Composable
-private fun CabecalhoPassos(aoVoltar: () -> Unit) {
+private fun CabecalhoExercicios(aoVoltar: () -> Unit) {
     Box(Modifier.fillMaxWidth().statusBarsPadding().height(58.dp)) {
         Surface(
             modifier = Modifier.size(38.dp).align(Alignment.CenterStart).clickable(onClick = aoVoltar),
@@ -109,19 +105,19 @@ private fun CabecalhoPassos(aoVoltar: () -> Unit) {
             color = Color(0xFFEAF2ED)
         ) {
             Box(contentAlignment = Alignment.Center) {
-                Text("‹", color = VerdePassosTela, fontSize = 32.sp, lineHeight = 32.sp)
+                Text("‹", color = VerdeExercicios, fontSize = 32.sp, lineHeight = 32.sp)
             }
         }
         Text(
-            "PASSOS",
+            "EXERCÍCIOS",
             modifier = Modifier.align(Alignment.Center),
-            color = VerdePassosTela,
+            color = VerdeExercicios,
             fontWeight = FontWeight.Bold,
             fontSize = 16.sp
         )
         Image(
             painter = painterResource(R.drawable.relatorio_treino),
-            contentDescription = "Relatório de passos",
+            contentDescription = "Relatório de exercícios",
             modifier = Modifier.size(30.dp).align(Alignment.CenterEnd)
         )
     }
@@ -137,11 +133,11 @@ private fun SeletorHoje() {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Surface(
                 modifier = Modifier.weight(1f).padding(3.dp).height(32.dp),
-                color = VerdePassosTela,
+                color = VerdeExercicios,
                 shape = RoundedCornerShape(18.dp)
             ) { Box(contentAlignment = Alignment.Center) { Text("Hoje", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp) } }
-            Text("7 dias", modifier = Modifier.weight(1f), textAlign = TextAlign.Center, fontSize = 12.sp, color = TextoPassosSecundario)
-            Text("30 dias", modifier = Modifier.weight(1f), textAlign = TextAlign.Center, fontSize = 12.sp, color = TextoPassosSecundario)
+            Text("7 dias", modifier = Modifier.weight(1f), textAlign = TextAlign.Center, fontSize = 12.sp, color = TextoExerciciosSecundario)
+            Text("30 dias", modifier = Modifier.weight(1f), textAlign = TextAlign.Center, fontSize = 12.sp, color = TextoExerciciosSecundario)
         }
     }
 }
@@ -154,7 +150,7 @@ private fun IndicadorPassos(passos: Long, progresso: Float, carregando: Boolean)
             val margem = largura / 2
             val tamanhoArco = Size(size.width - largura, size.height - largura)
             drawArc(
-                color = TrilhoPassos,
+                color = TrilhoExercicios,
                 startAngle = -90f,
                 sweepAngle = 360f,
                 useCenter = false,
@@ -164,7 +160,7 @@ private fun IndicadorPassos(passos: Long, progresso: Float, carregando: Boolean)
             )
             if (progresso > 0f) {
                 drawArc(
-                    color = VerdePassosTela,
+                    color = VerdeExercicios,
                     startAngle = -90f,
                     sweepAngle = 360f * progresso,
                     useCenter = false,
@@ -178,13 +174,13 @@ private fun IndicadorPassos(passos: Long, progresso: Float, carregando: Boolean)
             Image(painterResource(R.drawable.sapato), "Passos", Modifier.size(38.dp))
             Text(
                 if (carregando) "--" else formatarNumero(passos),
-                color = TextoPassos,
+                color = TextoExercicios,
                 fontWeight = FontWeight.Bold,
                 fontSize = 30.sp
             )
-            Text("passos", color = TextoPassos, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
-            Text("Meta: ${formatarNumero(MetaPassos)}", color = TextoPassosSecundario, fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp))
-            Text("${(progresso * 100).toInt()}%", color = VerdePassosTela, fontWeight = FontWeight.Bold, fontSize = 16.sp, modifier = Modifier.padding(top = 5.dp))
+            Text("passos", color = TextoExercicios, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+            Text("Meta: ${formatarNumero(MetaPassos)}", color = TextoExerciciosSecundario, fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp))
+            Text("${(progresso * 100).toInt()}%", color = VerdeExercicios, fontWeight = FontWeight.Bold, fontSize = 16.sp, modifier = Modifier.padding(top = 5.dp))
         }
     }
 }
@@ -203,15 +199,15 @@ private fun CartaoResumoPassos(titulo: String, valor: String, icone: Int, modifi
         Column(Modifier.padding(13.dp), verticalArrangement = Arrangement.SpaceBetween) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Image(painterResource(icone), null, Modifier.size(25.dp))
-                Text(titulo, color = TextoPassosSecundario, fontSize = 11.sp, modifier = Modifier.padding(start = 8.dp))
+                Text(titulo, color = TextoExerciciosSecundario, fontSize = 11.sp, modifier = Modifier.padding(start = 8.dp))
             }
-            Text(valor, color = TextoPassos, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+            Text(valor, color = TextoExercicios, fontSize = 22.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
 
 @Composable
-private fun BotaoTreinosPersonalizados(aoClicar: () -> Unit) {
+private fun BotaoIniciarTreino(aoClicar: () -> Unit) {
     Surface(
         modifier = Modifier.fillMaxWidth().padding(top = 14.dp).height(74.dp).clickable(onClick = aoClicar),
         color = Color.White,
@@ -230,16 +226,16 @@ private fun BotaoTreinosPersonalizados(aoClicar: () -> Unit) {
                 Image(painterResource(R.drawable.treino), "Treinos personalizados", Modifier.fillMaxSize())
             }
             Column(Modifier.padding(start = 12.dp).weight(1f)) {
-                Text("Treinos personalizados", color = TextoPassos, fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                Text("Atividades pensadas para você", color = TextoPassosSecundario, fontSize = 11.sp)
+                Text("Iniciar treino", color = TextoExercicios, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                Text("Abra seu treino personalizado de hoje", color = TextoExerciciosSecundario, fontSize = 11.sp)
             }
-            Text("›", color = VerdePassosTela, fontSize = 27.sp)
+            Text("›", color = VerdeExercicios, fontSize = 27.sp)
         }
     }
 }
 
 @Composable
-private fun DicaAdaPassos() {
+private fun DicaAdaExercicios() {
     Surface(
         modifier = Modifier.fillMaxWidth().padding(top = 14.dp),
         color = Color(0xFFF0F4F1),
@@ -253,7 +249,7 @@ private fun DicaAdaPassos() {
                 modifier = Modifier.size(58.dp)
             )
             Column(Modifier.padding(start = 10.dp).weight(1f)) {
-                Text("Dica da Ada AI", color = VerdePassosTela, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                Text("Dica da Ada AI", color = VerdeExercicios, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                 Text(
                     "Continue se exercitando, o exercício físico é vital para uma vida saudável.",
                     color = Color(0xFF42534B),
@@ -267,7 +263,7 @@ private fun DicaAdaPassos() {
 }
 
 @Composable
-private fun BarraInferiorPassos(aoVoltar: () -> Unit) {
+private fun BarraInferiorExercicios(aoVoltar: () -> Unit) {
     Surface(Modifier.fillMaxWidth().navigationBarsPadding(), color = Color.White, shadowElevation = 6.dp) {
         Row(Modifier.fillMaxWidth().height(62.dp), horizontalArrangement = Arrangement.SpaceAround, verticalAlignment = Alignment.CenterVertically) {
             listOf("⌂" to "Início", "⌁" to "Monitorar", "+" to "Adicionar", "▤" to "Exames", "●" to "Perfil").forEachIndexed { indice, item ->
@@ -275,8 +271,8 @@ private fun BarraInferiorPassos(aoVoltar: () -> Unit) {
                     Modifier.width(58.dp).clickable(enabled = indice == 0, onClick = aoVoltar),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(item.first, color = if (indice == 1) VerdePassosTela else TextoPassosSecundario, fontSize = if (indice == 2) 25.sp else 20.sp, fontWeight = FontWeight.Bold)
-                    Text(item.second, color = if (indice == 1) VerdePassosTela else TextoPassosSecundario, fontSize = 9.sp)
+                    Text(item.first, color = if (indice == 1) VerdeExercicios else TextoExerciciosSecundario, fontSize = if (indice == 2) 25.sp else 20.sp, fontWeight = FontWeight.Bold)
+                    Text(item.second, color = if (indice == 1) VerdeExercicios else TextoExerciciosSecundario, fontSize = 9.sp)
                 }
             }
         }

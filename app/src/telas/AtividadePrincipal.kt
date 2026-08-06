@@ -30,7 +30,8 @@ private enum class TelaAtual {
     MEDICAMENTOS,
     EMERGENCIA,
     HIDRATACAO,
-    PASSOS
+    EXERCICIOS,
+    TREINO
 }
 
 class AtividadePrincipal : ComponentActivity() {
@@ -140,7 +141,7 @@ class AtividadePrincipal : ComponentActivity() {
                         aoAbrirMedicamentos = { telaAtual = TelaAtual.MEDICAMENTOS },
                         aoAbrirEmergencia = { telaAtual = TelaAtual.EMERGENCIA },
                         aoAbrirHidratacao = { telaAtual = TelaAtual.HIDRATACAO },
-                        aoAbrirPassos = { telaAtual = TelaAtual.PASSOS },
+                        aoAbrirExercicios = { telaAtual = TelaAtual.EXERCICIOS },
                         dadosSaude = dadosSaude,
                         statusSaude = statusSaude,
                         aoConectarSaude = { conectarHealthConnect() },
@@ -171,11 +172,17 @@ class AtividadePrincipal : ComponentActivity() {
                             aoVoltar = { telaAtual = TelaAtual.INICIO }
                         )
 
-                        TelaAtual.PASSOS -> TelaPassos(
+                        TelaAtual.EXERCICIOS -> TelaExercicios(
                             passosHoje = dadosSaude.passos ?: 0L,
                             carregando = dadosSaude.passos == null,
                             aoAtualizar = { atualizarDadosSaude() },
+                            aoIniciarTreino = { telaAtual = TelaAtual.TREINO },
                             aoVoltar = { telaAtual = TelaAtual.INICIO }
+                        )
+
+                        TelaAtual.TREINO -> TelaTreino(
+                            aoVoltar = { telaAtual = TelaAtual.EXERCICIOS },
+                            aoVoltarInicio = { telaAtual = TelaAtual.INICIO }
                         )
                     }
                 }

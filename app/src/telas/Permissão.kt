@@ -8,7 +8,7 @@ import android.view.Gravity
 import android.widget.ScrollView
 import android.widget.TextView
 
-class PermissionsRationaleActivity : Activity() {
+class Permissão : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 

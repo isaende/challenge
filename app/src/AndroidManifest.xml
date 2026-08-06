@@ -27,7 +27,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="home_page.PermissionsRationaleActivity"
+            android:name="home_page.Permissão"
             android:exported="true">
             <intent-filter>
                 <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
@@ -37,7 +37,7 @@
             android:name="home_page.ViewPermissionUsageActivity"
             android:exported="true"
             android:permission="android.permission.START_VIEW_PERMISSION_USAGE"
-            android:targetActivity="home_page.PermissionsRationaleActivity">
+            android:targetActivity="home_page.Permissão">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW_PERMISSION_USAGE" />
                 <category android:name="android.intent.category.HEALTH_PERMISSIONS" />
