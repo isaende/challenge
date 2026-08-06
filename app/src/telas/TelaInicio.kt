@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -43,15 +44,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ada.chatmedico.demo.R
 
-private val VerdePrincipal = Color(0xFF007A4D)
-private val VerdeEscuro = Color(0xFF005C3A)
-private val VerdeClaro = Color(0xFFE8F7EF)
-private val FundoTela = Color(0xFFF7FAF8)
-private val TextoPrincipal = Color(0xFF17211C)
-private val TextoSecundario = Color(0xFF61706A)
-private val VermelhoSaude = Color(0xFFE84B4B)
-private val RoxoSono = Color(0xFF6750A4)
-private val VerdePassos = Color(0xFF168C67)
 
 data class ItemResumoSaude(
     val titulo: String,
@@ -64,14 +56,6 @@ data class ItemAcaoRapida(
     val titulo: String,
     val icone: Int,
     val cor: Color,
-    val aoClicar: () -> Unit = {}
-)
-
-data class ItemMenuInicio(
-    val titulo: String,
-    val icone: Int,
-    val selecionado: Boolean = false,
-    val redondo: Boolean = false,
     val aoClicar: () -> Unit = {}
 )
 
@@ -92,8 +76,14 @@ fun TelaInicio(
 ) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        containerColor = FundoTela,
-        bottomBar = { BarraMenuInferior(aoAbrirExames = aoAbrirExames) }
+        containerColor = fundoPrincipal,
+        contentWindowInsets = WindowInsets(0.dp),
+        bottomBar = {
+            BarraInferiorPadrao(
+                itemSelecionado = ItemBarraInferior.INICIO,
+                aoAbrirExames = aoAbrirExames
+            )
+        }
     ) { espacoTela ->
         Column(
             modifier = Modifier
@@ -127,7 +117,7 @@ private fun CabecalhoInicio() {
             .height(126.dp)
             .background(
                 Brush.horizontalGradient(
-                    listOf(VerdeEscuro, VerdePrincipal)
+                    listOf(verdeEscuro, verdePrincipal)
                 )
             )
             .statusBarsPadding()
@@ -136,12 +126,12 @@ private fun CabecalhoInicio() {
         Column(modifier = Modifier.align(Alignment.TopStart)) {
             Text(
                 text = "Bom dia,",
-                color = Color.White,
+                color = branco,
                 fontSize = 14.sp
             )
             Text(
                 text = "Maria!",
-                color = Color.White,
+                color = branco,
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -154,8 +144,8 @@ private fun CabecalhoInicio() {
         ) {
             CirculoComSigla(
                 sigla = "!",
-                corFundo = Color.White.copy(alpha = 0.18f),
-                corTexto = Color.White,
+                corFundo = branco.copy(alpha = 0.18f),
+                corTexto = branco,
                 tamanho = 32.dp
             )
             Image(
@@ -165,7 +155,7 @@ private fun CabecalhoInicio() {
                 modifier = Modifier
                     .size(48.dp)
                     .clip(CircleShape)
-                    .background(Color.White)
+                    .background(branco)
             )
         }
     }
@@ -223,19 +213,19 @@ private fun CartaoResumoSaude(
             "Batimentos cardiacos",
             dadosSaude.batimentos?.let { "$it bpm" } ?: "-- bpm",
             R.drawable.heart,
-            VermelhoSaude
+            vermelhoPrincipal
         ),
         ItemResumoSaude(
             "Sono",
             dadosSaude.sonoMinutos?.let { minutos -> "${minutos / 60}h ${minutos % 60}m" } ?: "--",
             R.drawable.night,
-            RoxoSono
+            roxoPrincipal
         ),
         ItemResumoSaude(
             "Passos",
             dadosSaude.passos?.let { "%,d".format(it).replace(",", ".") } ?: "--",
             R.drawable.footstep,
-            VerdePassos
+            verdePrincipal
         )
     )
 
@@ -243,7 +233,7 @@ private fun CartaoResumoSaude(
         modifier = Modifier
             .fillMaxWidth()
             .shadow(3.dp, RoundedCornerShape(8.dp)),
-        color = Color.White,
+        color = branco,
         shape = RoundedCornerShape(8.dp)
     ) {
         Column(Modifier.padding(12.dp)) {
@@ -251,13 +241,13 @@ private fun CartaoResumoSaude(
                 Column(Modifier.weight(1f)) {
                     Text(
                         text = "Resumo da sua saude",
-                        color = TextoPrincipal,
+                        color = textoPrimario,
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp
                     )
                     Text(
                         text = statusSaude,
-                        color = TextoSecundario,
+                        color = textoSecundario,
                         fontSize = 10.sp,
                         modifier = Modifier.padding(top = 2.dp)
                     )
@@ -266,12 +256,12 @@ private fun CartaoResumoSaude(
                     Button(
                         onClick = aoConectarSaude,
                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = VerdePrincipal),
+                        colors = ButtonDefaults.buttonColors(containerColor = verdePrincipal),
                         shape = RoundedCornerShape(24.dp)
                     ) {
                         Text(
                             text = textoBotaoSaude,
-                            color = Color.White,
+                            color = branco,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -298,9 +288,9 @@ private fun CartaoItemSaude(
 ) {
     Surface(
         modifier = modifier.height(96.dp),
-        color = Color.White,
+        color = branco,
         shape = RoundedCornerShape(8.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE6ECE9))
+        border = androidx.compose.foundation.BorderStroke(1.dp, borda)
     ) {
         Column(
             modifier = Modifier.padding(9.dp),
@@ -315,7 +305,7 @@ private fun CartaoItemSaude(
             Column {
                 Text(
                     text = item.titulo,
-                    color = TextoSecundario,
+                    color = textoSecundario,
                     fontSize = 9.sp,
                     lineHeight = 10.sp,
                     maxLines = 2,
@@ -323,7 +313,7 @@ private fun CartaoItemSaude(
                 )
                 Text(
                     text = item.valor,
-                    color = TextoPrincipal,
+                    color = textoPrimario,
                     fontWeight = FontWeight.Bold,
                     fontSize = 13.sp,
                     maxLines = 1,
@@ -341,13 +331,13 @@ private fun CartaoAdaAi(aoAbrirChatMedico: () -> Unit) {
             .fillMaxWidth()
             .height(200.dp)
             .clickable(onClick = aoAbrirChatMedico),
-        color = VerdeEscuro,
+        color = verdeEscuro,
         shape = RoundedCornerShape(8.dp)
     ) {
         Box(
             modifier = Modifier.background(
                 Brush.horizontalGradient(
-                    listOf(Color(0xFF004B33), Color(0xFF00875A))
+                    listOf(verdeEscuro, verdePrincipal)
                 )
             )
         ) {
@@ -360,28 +350,28 @@ private fun CartaoAdaAi(aoAbrirChatMedico: () -> Unit) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     CirculoComSigla(
                         sigla = "A",
-                        corFundo = Color.White.copy(alpha = 0.20f),
-                        corTexto = Color.White,
+                        corFundo = branco.copy(alpha = 0.20f),
+                        corTexto = branco,
                         tamanho = 26.dp
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(
                         text = "Ada AI",
-                        color = Color.White,
+                        color = branco,
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp
                     )
                     Spacer(Modifier.weight(1f))
                     Text(
                         text = ">",
-                        color = Color.White,
+                        color = branco,
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp
                     )
                 }
                 Text(
                     text = "Detectamos alteracao leve no seu padrao de sono esta semana.",
-                    color = Color.White,
+                    color = branco,
                     fontSize = 13.sp,
                     lineHeight = 18.sp,
                     modifier = Modifier.padding(top = 18.dp)
@@ -390,12 +380,12 @@ private fun CartaoAdaAi(aoAbrirChatMedico: () -> Unit) {
                 Button(
                     onClick = aoAbrirChatMedico,
                     contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                    colors = ButtonDefaults.buttonColors(containerColor = branco),
                     shape = RoundedCornerShape(24.dp)
                 ) {
                     Text(
                         text = "Ver detalhes",
-                        color = VerdeEscuro,
+                        color = verdeEscuro,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -410,7 +400,7 @@ private fun CartaoAdaAi(aoAbrirChatMedico: () -> Unit) {
                     .align(Alignment.BottomEnd)
                     .padding(end = 16.dp, bottom = 16.dp)
                     .clip(CircleShape)
-                    .background(VerdeClaro)
+                    .background(verdeClaro)
             )
         }
     }
@@ -425,12 +415,12 @@ private fun BlocoAcoesRapidas(
     aoAbrirExercicios: () -> Unit
 ) {
     val acoes = listOf(
-        ItemAcaoRapida("Telemedicina", R.drawable.buy_online, VerdePrincipal),
-        ItemAcaoRapida("Exames", R.drawable.doctor_notes, Color(0xFF1F7A8C), aoAbrirExames),
-        ItemAcaoRapida("Medicamentos", R.drawable.drugs, Color(0xFF2F7D32), aoAbrirMedicamentos),
-        ItemAcaoRapida("Emergencia", R.drawable.medicine, Color(0xFFD32F2F), aoAbrirEmergencia),
-        ItemAcaoRapida("Hidratação", R.drawable.agua, Color(0xFF1E9FD1), aoAbrirHidratacao),
-        ItemAcaoRapida("Exercícios", R.drawable.relatorio_treino, VerdePrincipal, aoAbrirExercicios)
+        ItemAcaoRapida("Telemedicina", R.drawable.buy_online, verdePrincipal),
+        ItemAcaoRapida("Exames", R.drawable.doctor_notes, azulPrincipal, aoAbrirExames),
+        ItemAcaoRapida("Medicamentos", R.drawable.drugs, verdePrincipal, aoAbrirMedicamentos),
+        ItemAcaoRapida("Emergencia", R.drawable.medicine, vermelhoPrincipal, aoAbrirEmergencia),
+        ItemAcaoRapida("Hidratação", R.drawable.agua, azulPrincipal, aoAbrirHidratacao),
+        ItemAcaoRapida("Exercícios", R.drawable.relatorio_treino, verdePrincipal, aoAbrirExercicios)
     )
 
     Column {
@@ -440,14 +430,14 @@ private fun BlocoAcoesRapidas(
         ) {
             Text(
                 text = "Acoes rapidas",
-                color = TextoPrincipal,
+                color = textoPrimario,
                 fontWeight = FontWeight.Bold,
                 fontSize = 14.sp,
                 modifier = Modifier.weight(1f)
             )
             Text(
                 text = "Editar",
-                color = VerdePrincipal,
+                color = verdePrincipal,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -480,7 +470,7 @@ private fun CartaoAcaoRapida(
         modifier = modifier
             .height(98.dp)
             .clickable(onClick = acao.aoClicar),
-        color = Color.White,
+        color = branco,
         shape = RoundedCornerShape(8.dp),
         shadowElevation = 1.dp
     ) {
@@ -497,7 +487,7 @@ private fun CartaoAcaoRapida(
             )
             Text(
                 text = acao.titulo,
-                color = TextoPrincipal,
+                color = textoPrimario,
                 fontSize = 9.sp,
                 lineHeight = 10.sp,
                 textAlign = TextAlign.Center,
@@ -505,86 +495,6 @@ private fun CartaoAcaoRapida(
                 overflow = TextOverflow.Clip
             )
         }
-    }
-}
-
-@Composable
-private fun BarraMenuInferior(aoAbrirExames: () -> Unit) {
-    val itensMenu = listOf(
-        ItemMenuInicio("Inicio", R.drawable.house_building, true),
-        ItemMenuInicio("Monitorar", R.drawable.arrow),
-        ItemMenuInicio("Adicionar", R.drawable.logo, true, redondo = true),
-        ItemMenuInicio("Exames", R.drawable.list, aoClicar = aoAbrirExames),
-        ItemMenuInicio("Perfil", R.drawable.user, redondo = true)
-    )
-
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .navigationBarsPadding(),
-        color = Color.White,
-        shadowElevation = 6.dp
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(62.dp)
-                .padding(horizontal = 6.dp),
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            itensMenu.forEach { item ->
-                if (item.titulo == "Adicionar") {
-                    FloatingActionButton(
-                        onClick = item.aoClicar,
-                        containerColor = VerdePrincipal,
-                        contentColor = Color.White,
-                        modifier = Modifier.size(48.dp)
-                    ) {
-                        Text("+", fontSize = 26.sp, fontWeight = FontWeight.Light)
-                    }
-                } else {
-                    BotaoMenuInferior(item)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun BotaoMenuInferior(item: ItemMenuInicio) {
-    val corItem = if (item.selecionado) VerdePrincipal else TextoSecundario
-    val formatoIcone = if (item.redondo) CircleShape else RoundedCornerShape(4.dp)
-
-    Column(
-        modifier = Modifier
-            .width(56.dp)
-            .clickable(onClick = item.aoClicar),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Box(
-            modifier = Modifier
-                .size(22.dp)
-                .clip(formatoIcone),
-            contentAlignment = Alignment.Center
-        ) {
-            Image(
-                painter = painterResource(item.icone),
-                contentDescription = item.titulo,
-                contentScale = if (item.redondo) ContentScale.Crop else ContentScale.Fit,
-                modifier = Modifier.fillMaxSize()
-            )
-        }
-        Spacer(Modifier.height(2.dp))
-        Text(
-            text = item.titulo,
-            color = corItem,
-            fontSize = 9.sp,
-            lineHeight = 10.sp,
-            textAlign = TextAlign.Center,
-            maxLines = 1,
-            overflow = TextOverflow.Clip
-        )
     }
 }
 

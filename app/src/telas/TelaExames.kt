@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -50,7 +51,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -69,16 +69,10 @@ import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-private val VerdePrincipalExames = Color(0xFF0C6A3C)
-private val VerdeEscuroExames = Color(0xFF064527)
-private val VerdeClaroExames = Color(0xFFEAF7F0)
-private val FundoExames = Color(0xFFF7FAF8)
-private val TextoPrincipalExames = Color(0xFF17211C)
-private val TextoSecundarioExames = Color(0xFF61706A)
-private val LinhaExames = Color(0xFFE7EEE9)
 private val ConversorExames = Json { ignoreUnknownKeys = true }
 private val FormatoDataExame = DateTimeFormatter.ofPattern("dd/MM/yyyy")
 
+// guarda informações do exame enviado, como um código único, nome, data, etc...
 @Serializable
 data class ExameEnviado(
     val codigo: String,
@@ -90,6 +84,7 @@ data class ExameEnviado(
     val caminhoCopia: String = ""
 )
 
+// usa uma memória simples do Android para salvar e ler a lista de exames, futuramente aplicar o branco de dados
 class RepositorioExames(
     contexto: Context
 ) {
@@ -115,6 +110,7 @@ class RepositorioExames(
     }
 }
 
+// função principal que controla o funcionamento da tela
 @Composable
 fun TelaExames(
     aoVoltarInicio: () -> Unit,
@@ -130,6 +126,7 @@ fun TelaExames(
     var nomeDigitado by remember { mutableStateOf("") }
     var dataDigitada by remember { mutableStateOf(LocalDate.now().format(FormatoDataExame)) }
 
+    // permite dar upload no arquivo (imagem ou pdf)
     val escolherArquivo = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { enderecoArquivo ->
@@ -157,13 +154,16 @@ fun TelaExames(
         return
     }
 
+    // organiza aonde deve ficar cada um dos componentes da tela e cores
     Scaffold(
         modifier = modificador.fillMaxSize(),
-        containerColor = FundoExames,
+        containerColor = fundoPrincipal,
+        contentWindowInsets = WindowInsets(0.dp),
         bottomBar = {
-            BarraInferiorExames(
+            BarraInferiorPadrao(
+                itemSelecionado = ItemBarraInferior.EXAMES,
                 aoAbrirInicio = aoVoltarInicio,
-                aoNovoExame = { escolherArquivo.launch(arrayOf("image/*", "application/pdf")) }
+                aoAdicionar = { escolherArquivo.launch(arrayOf("image/*", "application/pdf")) }
             )
         }
     ) { espaco ->
@@ -196,16 +196,17 @@ fun TelaExames(
                     .shadow(2.dp, RoundedCornerShape(26.dp)),
                 shape = RoundedCornerShape(26.dp),
                 contentPadding = PaddingValues(horizontal = 18.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = VerdePrincipalExames)
+                colors = ButtonDefaults.buttonColors(containerColor = verdePrincipal)
             ) {
-                Text("+", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                Text("+", color = branco, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.width(8.dp))
-                Text("Enviar novo exame", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Text("Enviar novo exame", color = branco, fontSize = 14.sp, fontWeight = FontWeight.Bold)
             }
             Spacer(Modifier.height(10.dp))
             CartaoAjudaExames()
         }
     }
+
 
     if (arquivoEscolhido != null) {
         DialogoSalvarExame(
@@ -239,6 +240,7 @@ fun TelaExames(
     }
 }
 
+// parte de cima da tela, alterar "dona maria" para o nome usuario que estiver no banco de dados
 @Composable
 private fun CabecalhoExames(
     aoVoltarInicio: () -> Unit,
@@ -255,56 +257,56 @@ private fun CabecalhoExames(
             modifier = Modifier
                 .size(42.dp)
                 .clip(CircleShape)
-                .background(VerdeClaroExames)
+                .background(verdeClaro)
         ) {
-            Text("<", color = VerdePrincipalExames, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+            Text("<", color = verdePrincipal, fontSize = 22.sp, fontWeight = FontWeight.Bold)
         }
         Column(
             modifier = Modifier.weight(1f),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Meus Exames", color = VerdeEscuroExames, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            Text("Dona Maria, acompanhe seus resultados.", color = TextoSecundarioExames, fontSize = 11.sp)
+            Text("Meus Exames", color = verdeEscuro, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            Text("Dona Maria, acompanhe seus resultados.", color = textoSecundario, fontSize = 11.sp)
         }
         IconButton(
             onClick = aoNovoExame,
             modifier = Modifier
                 .size(42.dp)
                 .clip(RoundedCornerShape(14.dp))
-                .background(VerdeClaroExames)
+                .background(verdeClaro)
         ) {
-            Text("^", color = VerdePrincipalExames, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+            Text("^", color = verdePrincipal, fontSize = 22.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
+
 
 @Composable
 private fun AbasExames() {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        color = Color.White,
+        color = branco,
         shape = RoundedCornerShape(20.dp),
-        border = BorderStroke(1.dp, LinhaExames)
+        border = BorderStroke(1.dp, borda)
     ) {
         Row(Modifier.padding(3.dp)) {
-            AbaExame("Todos", selecionada = false, Modifier.weight(1f))
             AbaExame("Enviados", selecionada = true, Modifier.weight(1f))
-            AbaExame("Resultados", selecionada = false, Modifier.weight(1f))
         }
     }
 }
+
 
 @Composable
 private fun AbaExame(texto: String, selecionada: Boolean, modificador: Modifier = Modifier) {
     Surface(
         modifier = modificador.height(34.dp),
-        color = if (selecionada) VerdePrincipalExames else Color.Transparent,
+        color = if (selecionada) verdePrincipal else transparente,
         shape = RoundedCornerShape(18.dp)
     ) {
         Box(contentAlignment = Alignment.Center) {
             Text(
                 text = texto,
-                color = if (selecionada) Color.White else TextoPrincipalExames,
+                color = if (selecionada) branco else textoPrimario,
                 fontWeight = FontWeight.Bold,
                 fontSize = 12.sp
             )
@@ -312,11 +314,12 @@ private fun AbaExame(texto: String, selecionada: Boolean, modificador: Modifier 
     }
 }
 
+// avisos da tela
 @Composable
 private fun CartaoAvisoExames() {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        color = Color.White,
+        color = branco,
         shape = RoundedCornerShape(18.dp),
         shadowElevation = 1.dp
     ) {
@@ -324,7 +327,7 @@ private fun CartaoAvisoExames() {
             modifier = Modifier
                 .background(
                     Brush.horizontalGradient(
-                        listOf(Color.White, VerdeClaroExames)
+                        listOf(branco, verdeClaro)
                     )
                 )
                 .padding(14.dp)
@@ -337,19 +340,19 @@ private fun CartaoAvisoExames() {
                     modifier = Modifier
                         .size(62.dp)
                         .clip(CircleShape)
-                        .background(VerdeClaroExames)
+                        .background(verdeClaro)
                 )
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
                     Text(
                         "Mantenha seus exames em dia!",
-                        color = TextoPrincipalExames,
+                        color = textoPrimario,
                         fontWeight = FontWeight.Bold,
                         fontSize = 13.sp
                     )
                     Text(
-                        "Exames enviados ajudam a cuidar melhor da sua saude.",
-                        color = TextoSecundarioExames,
+                        "Ada ajuda você ter acesso rápido ao seus exames para monitorar a saúde.",
+                        color = textoSecundario,
                         fontSize = 11.sp,
                         lineHeight = 14.sp
                     )
@@ -358,7 +361,7 @@ private fun CartaoAvisoExames() {
                     modifier = Modifier
                         .size(38.dp)
                         .clip(CircleShape)
-                        .background(VerdePrincipalExames),
+                        .background(verdePrincipal),
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
@@ -373,6 +376,7 @@ private fun CartaoAvisoExames() {
     }
 }
 
+// lista com todos exames enviados
 @Composable
 private fun ListaExamesEnviados(
     exames: List<ExameEnviado>,
@@ -382,9 +386,9 @@ private fun ListaExamesEnviados(
     Surface(
         modifier = modificador
             .fillMaxWidth(),
-        color = Color.White,
+        color = branco,
         shape = RoundedCornerShape(18.dp),
-        border = BorderStroke(1.dp, LinhaExames)
+        border = BorderStroke(1.dp, borda)
     ) {
         if (exames.isEmpty()) {
             Column(
@@ -394,10 +398,10 @@ private fun ListaExamesEnviados(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                Text("Nenhum exame enviado", color = TextoPrincipalExames, fontWeight = FontWeight.Bold)
+                Text("Nenhum exame enviado", color = textoPrimario, fontWeight = FontWeight.Bold)
                 Text(
                     "Envie uma foto ou PDF para guardar aqui.",
-                    color = TextoSecundarioExames,
+                    color = textoSecundario,
                     fontSize = 12.sp,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(top = 6.dp)
@@ -433,37 +437,37 @@ private fun LinhaExame(
         Column(Modifier.weight(1f)) {
             Text(
                 exame.nome,
-                color = TextoPrincipalExames,
+                color = textoPrimario,
                 fontWeight = FontWeight.Bold,
                 fontSize = 14.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            Text(exame.data, color = TextoSecundarioExames, fontSize = 12.sp)
+            Text(exame.data, color = textoSecundario, fontSize = 12.sp)
             Text(
                 if (exame.tipoArquivo.startsWith("image/")) "Foto enviada" else "PDF enviado",
-                color = VerdePrincipalExames,
+                color = verdePrincipal,
                 fontWeight = FontWeight.Bold,
                 fontSize = 10.sp
             )
         }
-        Text(">", color = TextoPrincipalExames, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+        Text(">", color = textoPrimario, fontSize = 24.sp, fontWeight = FontWeight.Bold)
     }
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
             .height(1.dp)
-            .background(LinhaExames)
+            .background(borda)
     )
 }
 
 @Composable
 private fun IconeArquivo(tipoArquivo: String) {
-    val cor = if (tipoArquivo.startsWith("image/")) Color(0xFFF2A51A) else VerdePrincipalExames
+    val cor = if (tipoArquivo.startsWith("image/")) amareloPrincipal else verdePrincipal
     Surface(
         modifier = Modifier.size(38.dp),
-        color = Color.Transparent,
+        color = transparente,
         shape = RoundedCornerShape(8.dp),
         border = BorderStroke(2.dp, cor)
     ) {
@@ -478,6 +482,7 @@ private fun IconeArquivo(tipoArquivo: String) {
     }
 }
 
+// tela para escolher o nome ao enviar o exame
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DialogoSalvarExame(
@@ -509,12 +514,12 @@ private fun DialogoSalvarExame(
         },
         confirmButton = {
             TextButton(onClick = aoSalvar) {
-                Text("Salvar", color = VerdePrincipalExames, fontWeight = FontWeight.Bold)
+                Text("Salvar", color = verdePrincipal, fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {
             TextButton(onClick = aoCancelar) {
-                Text("Cancelar", color = TextoSecundarioExames)
+                Text("Cancelar", color = textoSecundario)
             }
         }
     )
@@ -528,8 +533,14 @@ private fun TelaDetalheExame(
     val contexto = LocalContext.current
 
     Scaffold(
-        containerColor = FundoExames,
-        bottomBar = { BarraInferiorExames(aoAbrirInicio = aoVoltar, aoNovoExame = {}) }
+        containerColor = fundoPrincipal,
+        contentWindowInsets = WindowInsets(0.dp),
+        bottomBar = {
+            BarraInferiorPadrao(
+                itemSelecionado = ItemBarraInferior.EXAMES,
+                aoAbrirInicio = aoVoltar
+            )
+        }
     ) { espaco ->
         Column(
             modifier = Modifier
@@ -544,29 +555,29 @@ private fun TelaDetalheExame(
                     modifier = Modifier
                         .size(42.dp)
                         .clip(CircleShape)
-                        .background(VerdeClaroExames)
+                        .background(verdeClaro)
                 ) {
-                    Text("<", color = VerdePrincipalExames, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                    Text("<", color = verdePrincipal, fontSize = 22.sp, fontWeight = FontWeight.Bold)
                 }
                 Spacer(Modifier.width(12.dp))
                 Column {
-                    Text("Resultado do exame", color = VerdeEscuroExames, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                    Text(exame.data, color = TextoSecundarioExames, fontSize = 12.sp)
+                    Text("Resultado do exame", color = verdeEscuro, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Text(exame.data, color = textoSecundario, fontSize = 12.sp)
                 }
             }
             Spacer(Modifier.height(18.dp))
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                color = Color.White,
+                color = branco,
                 shape = RoundedCornerShape(18.dp),
                 shadowElevation = 1.dp
             ) {
                 Column(Modifier.padding(18.dp)) {
                     IconeArquivo(tipoArquivo = exame.tipoArquivo)
                     Spacer(Modifier.height(14.dp))
-                    Text(exame.nome, color = TextoPrincipalExames, fontWeight = FontWeight.Bold, fontSize = 20.sp)
-                    Text("Arquivo: ${exame.nomeArquivo}", color = TextoSecundarioExames, fontSize = 12.sp, modifier = Modifier.padding(top = 6.dp))
-                    Text("Data: ${exame.data}", color = TextoSecundarioExames, fontSize = 12.sp)
+                    Text(exame.nome, color = textoPrimario, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                    Text("Arquivo: ${exame.nomeArquivo}", color = textoSecundario, fontSize = 12.sp, modifier = Modifier.padding(top = 6.dp))
+                    Text("Data: ${exame.data}", color = textoSecundario, fontSize = 12.sp)
                     Spacer(Modifier.height(22.dp))
                     Button(
                         onClick = { abrirArquivoExame(contexto, exame) },
@@ -574,9 +585,9 @@ private fun TelaDetalheExame(
                             .fillMaxWidth()
                             .height(50.dp),
                         shape = RoundedCornerShape(25.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = VerdePrincipalExames)
+                        colors = ButtonDefaults.buttonColors(containerColor = verdePrincipal)
                     ) {
-                        Text("Abrir resultado", color = Color.White, fontWeight = FontWeight.Bold)
+                        Text("Abrir resultado", color = branco, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -590,7 +601,7 @@ private fun CartaoAjudaExames() {
         modifier = Modifier
             .fillMaxWidth()
             .height(62.dp),
-        color = Color.White,
+        color = branco,
         shape = RoundedCornerShape(18.dp),
         shadowElevation = 1.dp
     ) {
@@ -600,90 +611,20 @@ private fun CartaoAjudaExames() {
         ) {
             Surface(
                 modifier = Modifier.size(38.dp),
-                color = VerdeClaroExames,
+                color = verdeClaro,
                 shape = CircleShape
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Text("?", color = VerdePrincipalExames, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Text("?", color = verdePrincipal, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 }
             }
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
-                Text("Precisa de ajuda?", color = VerdePrincipalExames, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                Text("Nossa equipe esta pronta para te ajudar.", color = TextoSecundarioExames, fontSize = 11.sp)
+                Text("Precisa de ajuda?", color = verdePrincipal, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                Text("Nossa equipe esta pronta para te ajudar.", color = textoSecundario, fontSize = 11.sp)
             }
-            Text(">", color = TextoPrincipalExames, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+            Text(">", color = textoPrimario, fontSize = 22.sp, fontWeight = FontWeight.Bold)
         }
-    }
-}
-
-@Composable
-private fun BarraInferiorExames(
-    aoAbrirInicio: () -> Unit,
-    aoNovoExame: () -> Unit
-) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .navigationBarsPadding(),
-        color = Color.White,
-        shadowElevation = 6.dp
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(62.dp)
-                .padding(horizontal = 6.dp),
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            ItemMenuExames("Inicio", R.drawable.house_building, false, aoAbrirInicio)
-            ItemMenuExames("Monitorar", R.drawable.heart_green, false, {})
-            FloatingActionButton(
-                onClick = aoNovoExame,
-                containerColor = VerdePrincipalExames,
-                contentColor = Color.White,
-                modifier = Modifier.size(48.dp)
-            ) {
-                Text("+", fontSize = 26.sp, fontWeight = FontWeight.Light)
-            }
-            ItemMenuExames("Exames", R.drawable.list, true, {})
-            ItemMenuExames("Perfil", R.drawable.user, false, {})
-        }
-    }
-}
-
-@Composable
-private fun ItemMenuExames(
-    titulo: String,
-    icone: Int,
-    selecionado: Boolean,
-    aoClicar: () -> Unit
-) {
-    val corItem = if (selecionado) VerdePrincipalExames else TextoSecundarioExames
-    Column(
-        modifier = Modifier
-            .width(58.dp)
-            .clickable(onClick = aoClicar),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Image(
-            painter = painterResource(icone),
-            contentDescription = titulo,
-            contentScale = ContentScale.Fit,
-            modifier = Modifier
-                .size(22.dp)
-                .clip(if (titulo == "Perfil") CircleShape else RoundedCornerShape(4.dp))
-        )
-        Spacer(Modifier.height(2.dp))
-        Text(
-            titulo,
-            color = corItem,
-            fontSize = 9.sp,
-            maxLines = 1,
-            overflow = TextOverflow.Clip,
-            textAlign = TextAlign.Center
-        )
     }
 }
 

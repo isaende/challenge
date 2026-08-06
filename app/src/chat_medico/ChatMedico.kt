@@ -43,7 +43,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -55,6 +54,16 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ada.chatmedico.demo.R
+import home_page.amareloClaro
+import home_page.borda
+import home_page.branco
+import home_page.fundoPrincipal
+import home_page.textoPrimario
+import home_page.textoSecundario
+import home_page.transparente
+import home_page.verdeClaro
+import home_page.verdeEscuro
+import home_page.verdePrincipal
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.okhttp.OkHttp
@@ -272,17 +281,17 @@ private fun ConteudoChatMedico(
     }
 
     Scaffold(
-        containerColor = Color(0xFFF7FAF8),
+        containerColor = fundoPrincipal,
         contentWindowInsets = WindowInsets(0.dp),
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("Fale com a Ada", fontWeight = FontWeight.SemiBold) },
                 navigationIcon = {
                     IconButton(onClick = aoVoltar) {
-                        Text("<", color = Color(0xFF17211C), fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                        Text("<", color = textoPrimario, fontSize = 24.sp, fontWeight = FontWeight.Bold)
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color(0xFFF7FAF8))
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = fundoPrincipal)
             )
         },
         bottomBar = {
@@ -305,13 +314,13 @@ private fun ConteudoChatMedico(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
-                color = Color(0xFFE8F7EF),
+                color = verdeClaro,
                 shape = RoundedCornerShape(8.dp)
             ) {
                 Text(
                     text = TEXTO_AVISO,
                     modifier = Modifier.padding(12.dp),
-                    color = Color(0xFF004E35),
+                    color = verdeEscuro,
                     fontSize = 13.sp,
                     lineHeight = 18.sp
                 )
@@ -347,13 +356,13 @@ private fun Cabecalho() {
             modifier = Modifier
                 .size(70.dp)
                 .clip(CircleShape)
-                .background(Color(0xFFE8F7EF))
-                .border(1.dp, Color(0xFFE0E8E3), CircleShape)
+                .background(verdeClaro)
+                .border(1.dp, borda, CircleShape)
         )
         Spacer(Modifier.width(12.dp))
         Column {
             Text("Olá! Eu sou a Ada.", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-            Text("Informações educativas em saúde.", color = Color(0xFF61706A), fontSize = 13.sp)
+            Text("Informações educativas em saúde.", color = textoSecundario, fontSize = 13.sp)
         }
     }
 }
@@ -368,9 +377,9 @@ private fun LinhaMensagem(mensagem: MensagemChat) {
         Surface(
             modifier = Modifier.fillMaxWidth(0.86f),
             color = when {
-                ehUsuario -> Color(0xFF007A4D)
-                mensagem.tipo == TipoRespostaMedica.URGENCIA -> Color(0xFFFFF4E5)
-                else -> Color.White
+                ehUsuario -> verdePrincipal
+                mensagem.tipo == TipoRespostaMedica.URGENCIA -> amareloClaro
+                else -> branco
             },
             shape = RoundedCornerShape(14.dp),
             shadowElevation = 1.dp
@@ -380,12 +389,12 @@ private fun LinhaMensagem(mensagem: MensagemChat) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (mensagem.carregando) {
-                    CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = Color(0xFF007A4D))
+                    CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = verdePrincipal)
                     Spacer(Modifier.width(8.dp))
                 }
                 Text(
                     text = mensagem.texto,
-                    color = if (ehUsuario) Color.White else Color(0xFF17211C),
+                    color = if (ehUsuario) branco else textoPrimario,
                     fontSize = 14.sp,
                     lineHeight = 20.sp
                 )
@@ -408,7 +417,7 @@ private fun CampoMensagem(
             .fillMaxWidth()
             .navigationBarsPadding()
             .imePadding(),
-        color = Color(0xFFF7FAF8),
+        color = fundoPrincipal,
         shadowElevation = 4.dp
     ) {
         Column(Modifier.padding(12.dp)) {
@@ -424,12 +433,12 @@ private fun CampoMensagem(
                     keyboardActions = KeyboardActions(onSend = { if (podeEnviar) aoEnviar() }),
                     shape = RoundedCornerShape(24.dp),
                     colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color.White,
-                        unfocusedContainerColor = Color.White,
-                        disabledContainerColor = Color.White,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        disabledIndicatorColor = Color.Transparent
+                        focusedContainerColor = branco,
+                        unfocusedContainerColor = branco,
+                        disabledContainerColor = branco,
+                        focusedIndicatorColor = transparente,
+                        unfocusedIndicatorColor = transparente,
+                        disabledIndicatorColor = transparente
                     )
                 )
                 Spacer(Modifier.width(8.dp))
@@ -437,7 +446,7 @@ private fun CampoMensagem(
                     onClick = aoEnviar,
                     enabled = podeEnviar,
                     shape = RoundedCornerShape(24.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF007A4D))
+                    colors = ButtonDefaults.buttonColors(containerColor = verdePrincipal)
                 ) {
                     Text(if (enviando) "..." else "Enviar")
                 }

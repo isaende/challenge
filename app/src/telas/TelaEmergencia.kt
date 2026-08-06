@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -49,18 +50,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ada.chatmedico.demo.R
 
-private val VerdeEmergencia = Color(0xFF087542)
-private val VerdeEscuroEmergencia = Color(0xFF095231)
-private val VerdeClaroEmergencia = Color(0xFFEAF7F0)
-private val FundoEmergencia = Color(0xFFF7FAF8)
-private val VermelhoEmergencia = Color(0xFFD9232E)
-private val VermelhoClaroEmergencia = Color(0xFFFFF0F1)
-private val TextoEmergencia = Color(0xFF17211C)
-private val TextoSuaveEmergencia = Color(0xFF61706A)
-private val LinhaEmergencia = Color(0xFFE7EEE9)
 private const val LINK_VIDEO_PRIMEIROS_SOCORROS = "https://youtu.be/1kW8i3aXhz0?si=jzxXxGSF7KscDWHY"
 private const val LINK_MANUAL_PRIMEIROS_SOCORROS = "https://www.samunoroestepr.com.br/materia/dicas/1-dicas-de-primeiros-socorros"
 
+// controla o comportamento da tela e o vídeo e o manual
 @Composable
 fun TelaEmergencia(
     aoVoltarInicio: () -> Unit,
@@ -71,9 +64,11 @@ fun TelaEmergencia(
 
     Scaffold(
         modifier = modificador.fillMaxSize(),
-        containerColor = FundoEmergencia,
+        containerColor = fundoPrincipal,
+        contentWindowInsets = WindowInsets(0.dp),
         bottomBar = {
-            BarraInferiorEmergencia(
+            BarraInferiorPadrao(
+                itemSelecionado = ItemBarraInferior.NENHUM,
                 aoAbrirInicio = aoVoltarInicio,
                 aoAbrirExames = aoAbrirExames
             )
@@ -92,17 +87,17 @@ fun TelaEmergencia(
             CartaoSosEmergencia()
             NumerosEmergencia()
             BotaoLinkEmergencia(
-                titulo = "Video de primeiros socorros",
-                subtitulo = "Assista orientacoes rapidas para agir com seguranca.",
+                titulo = "Vídeo de primeiros socorros",
+                subtitulo = "Assista orientações rápidas para agir com segurança em casos de emergência.",
                 icone = R.drawable.multimidia,
-                corFundoIcone = VermelhoClaroEmergencia,
+                corFundoIcone = vermelhoClaro,
                 aoClicar = { abrirLinkEmergencia(contexto, LINK_VIDEO_PRIMEIROS_SOCORROS) }
             )
             BotaoLinkEmergencia(
                 titulo = "Manual de primeiros socorros",
-                subtitulo = "Consulte dicas para diferentes situacoes.",
+                subtitulo = "Consulte dicas para diferentes situações.",
                 icone = R.drawable.manual_medico,
-                corFundoIcone = VerdeClaroEmergencia,
+                corFundoIcone = verdeClaro,
                 aoClicar = { abrirLinkEmergencia(contexto, LINK_MANUAL_PRIMEIROS_SOCORROS) }
             )
             CartaoAvisoSeguranca()
@@ -124,13 +119,13 @@ private fun CabecalhoEmergencia(aoVoltarInicio: () -> Unit) {
             modifier = Modifier
                 .size(38.dp)
                 .clip(RoundedCornerShape(12.dp))
-                .background(Color.White)
+                .background(branco)
         ) {
-            Text("<", color = TextoEmergencia, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+            Text("<", color = textoPrimario, fontSize = 22.sp, fontWeight = FontWeight.Bold)
         }
         Text(
-            "Emergencia",
-            color = VerdeEscuroEmergencia,
+            "Emergência",
+            color = verdeEscuro,
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
@@ -147,14 +142,14 @@ private fun CartaoSosEmergencia() {
             .fillMaxWidth()
             .height(124.dp)
             .shadow(3.dp, RoundedCornerShape(18.dp)),
-        color = VermelhoEmergencia,
+        color = vermelhoPrincipal,
         shape = RoundedCornerShape(18.dp)
     ) {
         Box(
             modifier = Modifier
                 .background(
                     Brush.horizontalGradient(
-                        listOf(Color(0xFFE12A33), Color(0xFFC91C25))
+                        listOf(vermelhoPrincipal, vermelhoEscuro)
                     )
                 )
                 .padding(18.dp)
@@ -164,10 +159,10 @@ private fun CartaoSosEmergencia() {
                     .align(Alignment.CenterStart)
                     .padding(end = 100.dp)
             ) {
-                Text("Precisa de ajuda?", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Text("Precisa de ajuda?", color = branco, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 Text(
                     "Acesso rapido a emergencias e SOS.",
-                    color = Color.White,
+                    color = branco,
                     fontSize = 13.sp,
                     lineHeight = 18.sp,
                     modifier = Modifier.padding(top = 10.dp)
@@ -177,23 +172,24 @@ private fun CartaoSosEmergencia() {
                 modifier = Modifier
                     .size(74.dp)
                     .align(Alignment.CenterEnd),
-                color = Color.White,
+                color = branco,
                 shape = CircleShape
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Text("SOS", color = VermelhoEmergencia, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text("SOS", color = vermelhoPrincipal, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
     }
 }
 
+// numeros de emergencia para ligar
 @Composable
 private fun NumerosEmergencia() {
     Column {
         Text(
             "Ligar para emergencia",
-            color = TextoEmergencia,
+            color = textoPrimario,
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(start = 6.dp, bottom = 12.dp)
@@ -204,7 +200,7 @@ private fun NumerosEmergencia() {
         ) {
             CartaoNumeroEmergencia("SAMU", "192", R.drawable.samu192, Modifier.weight(1f))
             CartaoNumeroEmergencia("Bombeiros", "193", R.drawable.fogueira, Modifier.weight(1f))
-            CartaoNumeroEmergencia("Policia", "190", R.drawable.sirene, Modifier.weight(1f))
+            CartaoNumeroEmergencia("Polícia", "190", R.drawable.sirene, Modifier.weight(1f))
         }
     }
 }
@@ -222,9 +218,9 @@ private fun CartaoNumeroEmergencia(
     ) {
         Surface(
             modifier = Modifier.size(72.dp),
-            color = Color.White,
+            color = branco,
             shape = CircleShape,
-            border = BorderStroke(1.dp, LinhaEmergencia),
+            border = BorderStroke(1.dp, borda),
             shadowElevation = 1.dp
         ) {
             Box(contentAlignment = Alignment.Center) {
@@ -238,7 +234,7 @@ private fun CartaoNumeroEmergencia(
         }
         Text(
             titulo,
-            color = TextoEmergencia,
+            color = textoPrimario,
             fontWeight = FontWeight.Bold,
             fontSize = 12.sp,
             textAlign = TextAlign.Center,
@@ -246,10 +242,11 @@ private fun CartaoNumeroEmergencia(
             overflow = TextOverflow.Clip,
             modifier = Modifier.padding(top = 8.dp)
         )
-        Text(numero, color = VermelhoEmergencia, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+        Text(numero, color = vermelhoPrincipal, fontWeight = FontWeight.Bold, fontSize = 15.sp)
     }
 }
 
+// direciona os links 
 @Composable
 private fun BotaoLinkEmergencia(
     titulo: String,
@@ -263,9 +260,9 @@ private fun BotaoLinkEmergencia(
             .fillMaxWidth()
             .height(74.dp)
             .clickable(onClick = aoClicar),
-        color = Color.White,
+        color = branco,
         shape = RoundedCornerShape(16.dp),
-        border = BorderStroke(1.dp, LinhaEmergencia),
+        border = BorderStroke(1.dp, borda),
         shadowElevation = 1.dp
     ) {
         Row(
@@ -288,21 +285,22 @@ private fun BotaoLinkEmergencia(
             }
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
-                Text(titulo, color = TextoEmergencia, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                Text(subtitulo, color = TextoSuaveEmergencia, fontSize = 11.sp, lineHeight = 14.sp)
+                Text(titulo, color = textoPrimario, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                Text(subtitulo, color = textoSecundario, fontSize = 11.sp, lineHeight = 14.sp)
             }
-            Text(">", color = VerdeEmergencia, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+            Text(">", color = verdePrincipal, fontSize = 22.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
 
+// texto de aviso da tela
 @Composable
 private fun CartaoAvisoSeguranca() {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .height(72.dp),
-        color = VermelhoClaroEmergencia,
+        color = vermelhoClaro,
         shape = RoundedCornerShape(16.dp)
     ) {
         Row(
@@ -311,89 +309,19 @@ private fun CartaoAvisoSeguranca() {
         ) {
             Surface(
                 modifier = Modifier.size(42.dp),
-                color = Color.White,
+                color = branco,
                 shape = CircleShape
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Text("!", color = VermelhoEmergencia, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                    Text("!", color = vermelhoPrincipal, fontWeight = FontWeight.Bold, fontSize = 20.sp)
                 }
             }
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
-                Text("Sua seguranca e nossa prioridade.", color = TextoEmergencia, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                Text("Estamos aqui para te ajudar.", color = TextoSuaveEmergencia, fontSize = 11.sp)
+                Text("Sua segurança e nossa prioridade.", color = textoPrimario, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                Text("Estamos aqui para te ajudar.", color = textoSecundario, fontSize = 11.sp)
             }
         }
-    }
-}
-
-@Composable
-private fun BarraInferiorEmergencia(
-    aoAbrirInicio: () -> Unit,
-    aoAbrirExames: () -> Unit
-) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .navigationBarsPadding(),
-        color = Color.White,
-        shadowElevation = 6.dp
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(62.dp)
-                .padding(horizontal = 6.dp),
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            ItemMenuEmergencia("Inicio", R.drawable.house_building, false, aoAbrirInicio)
-            ItemMenuEmergencia("Favoritos", R.drawable.heart_green, false, {})
-            FloatingActionButton(
-                onClick = {},
-                containerColor = VerdeEmergencia,
-                contentColor = Color.White,
-                modifier = Modifier.size(48.dp)
-            ) {
-                Text("+", fontSize = 26.sp, fontWeight = FontWeight.Light)
-            }
-            ItemMenuEmergencia("Exames", R.drawable.list, false, aoAbrirExames)
-            ItemMenuEmergencia("Menu", R.drawable.arrow, false, {})
-        }
-    }
-}
-
-@Composable
-private fun ItemMenuEmergencia(
-    titulo: String,
-    icone: Int,
-    selecionado: Boolean,
-    aoClicar: () -> Unit
-) {
-    val corItem = if (selecionado) VerdeEmergencia else TextoSuaveEmergencia
-    Column(
-        modifier = Modifier
-            .width(58.dp)
-            .clickable(onClick = aoClicar),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Image(
-            painter = painterResource(icone),
-            contentDescription = titulo,
-            contentScale = ContentScale.Fit,
-            modifier = Modifier
-                .size(22.dp)
-                .clip(RoundedCornerShape(4.dp))
-        )
-        Spacer(Modifier.height(2.dp))
-        Text(
-            titulo,
-            color = corItem,
-            fontSize = 9.sp,
-            maxLines = 1,
-            overflow = TextOverflow.Clip,
-            textAlign = TextAlign.Center
-        )
     }
 }
 

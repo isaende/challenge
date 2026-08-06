@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -54,7 +55,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -76,15 +76,6 @@ import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-private val VerdeMedicamentos = Color(0xFF087542)
-private val VerdeEscuroMedicamentos = Color(0xFF095231)
-private val VerdeClaroMedicamentos = Color(0xFFEAF7F0)
-private val FundoMedicamentos = Color(0xFFF7FAF8)
-private val TextoMedicamentos = Color(0xFF17211C)
-private val TextoSuaveMedicamentos = Color(0xFF61706A)
-private val LinhaMedicamentos = Color(0xFFE4ECE7)
-private val AmareloMedicamentos = Color(0xFFF6B43B)
-private val VermelhoMedicamentos = Color(0xFFE9553F)
 private val ConversorMedicamentos = Json { ignoreUnknownKeys = true }
 private val FormatoHoraMedicamento = DateTimeFormatter.ofPattern("HH:mm")
 private const val CANAL_LEMBRETES_MEDICAMENTOS = "lembretes_medicamentos"
@@ -181,9 +172,11 @@ fun TelaMedicamentos(
 
     Scaffold(
         modifier = modificador.fillMaxSize(),
-        containerColor = FundoMedicamentos,
+        containerColor = fundoPrincipal,
+        contentWindowInsets = WindowInsets(0.dp),
         bottomBar = {
-            BarraInferiorMedicamentos(
+            BarraInferiorPadrao(
+                itemSelecionado = ItemBarraInferior.NENHUM,
                 aoAbrirInicio = aoVoltarInicio,
                 aoAdicionar = { exibindoFormulario = true },
                 aoAbrirExames = aoAbrirExames
@@ -211,7 +204,7 @@ fun TelaMedicamentos(
                 Spacer(Modifier.height(12.dp))
                 Text(
                     "Meus medicamentos",
-                    color = TextoMedicamentos,
+                    color = textoPrimario,
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp,
                     modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
@@ -221,9 +214,9 @@ fun TelaMedicamentos(
             item {
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    color = Color.White,
+                    color = branco,
                     shape = RoundedCornerShape(18.dp),
-                    border = BorderStroke(1.dp, LinhaMedicamentos)
+                    border = BorderStroke(1.dp, borda)
                 ) {
                     Column {
                         if (medicamentos.isEmpty()) {
@@ -241,11 +234,11 @@ fun TelaMedicamentos(
                                 .padding(horizontal = 12.dp, vertical = 12.dp)
                                 .height(46.dp),
                             shape = RoundedCornerShape(23.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = VerdeMedicamentos)
+                            colors = ButtonDefaults.buttonColors(containerColor = verdePrincipal)
                         ) {
-                            Text("+", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                            Text("+", color = branco, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                             Spacer(Modifier.width(8.dp))
-                            Text("Adicionar medicamento", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                            Text("Adicionar medicamento", color = branco, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                         }
                     }
                 }
@@ -264,7 +257,7 @@ private fun CabecalhoMedicamentos(aoVoltarInicio: () -> Unit) {
     Column(Modifier.fillMaxWidth()) {
         Text(
             "MEDICAMENTOS",
-            color = VerdeEscuroMedicamentos,
+            color = verdeEscuro,
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier
@@ -282,25 +275,25 @@ private fun CabecalhoMedicamentos(aoVoltarInicio: () -> Unit) {
                 modifier = Modifier
                     .size(38.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color.White)
+                    .background(branco)
             ) {
-                Text("<", color = VerdeMedicamentos, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                Text("<", color = verdePrincipal, fontSize = 22.sp, fontWeight = FontWeight.Bold)
             }
             Column(
                 modifier = Modifier.weight(1f),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("Medicamentos", color = VerdeEscuroMedicamentos, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                Text("Dona Maria", color = TextoSuaveMedicamentos, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                Text("Medicamentos", color = verdeEscuro, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text("Dona Maria", color = textoSecundario, fontSize = 11.sp, fontWeight = FontWeight.Bold)
             }
             Box(
                 modifier = Modifier
                     .size(38.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color.White),
+                    .background(branco),
                 contentAlignment = Alignment.Center
             ) {
-                Text("!", color = VerdeMedicamentos, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text("!", color = verdePrincipal, fontSize = 18.sp, fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -316,19 +309,19 @@ private fun CartaoProximaDose(
             .fillMaxWidth()
             .height(150.dp)
             .shadow(1.dp, RoundedCornerShape(18.dp)),
-        color = Color.White,
+        color = branco,
         shape = RoundedCornerShape(18.dp)
     ) {
         Box(
             modifier = Modifier
                 .background(
-                    Brush.horizontalGradient(listOf(Color.White, VerdeClaroMedicamentos))
+                    Brush.horizontalGradient(listOf(branco, verdeClaro))
                 )
                 .padding(14.dp)
         ) {
             Text(
                 "Proxima dose",
-                color = VerdeMedicamentos,
+                color = verdePrincipal,
                 fontWeight = FontWeight.Bold,
                 fontSize = 12.sp,
                 modifier = Modifier.align(Alignment.TopStart)
@@ -341,7 +334,7 @@ private fun CartaoProximaDose(
             ) {
                 Surface(
                     modifier = Modifier.size(48.dp),
-                    color = VerdeClaroMedicamentos,
+                    color = verdeClaro,
                     shape = CircleShape
                 ) {
                     Box(contentAlignment = Alignment.Center) {
@@ -357,7 +350,7 @@ private fun CartaoProximaDose(
                 Column {
                     Text(
                         medicamento?.nome ?: "Nenhum medicamento",
-                        color = TextoMedicamentos,
+                        color = textoPrimario,
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp,
                         maxLines = 1,
@@ -365,14 +358,14 @@ private fun CartaoProximaDose(
                     )
                     Text(
                         medicamento?.dosagem ?: "Adicione um lembrete",
-                        color = TextoSuaveMedicamentos,
+                        color = textoSecundario,
                         fontSize = 11.sp,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                     Text(
                         if (medicamento != null) "Hoje as ${medicamento.horario}" else "--:--",
-                        color = VerdeMedicamentos,
+                        color = verdePrincipal,
                         fontWeight = FontWeight.Bold,
                         fontSize = 11.sp,
                         modifier = Modifier.padding(top = 4.dp)
@@ -387,11 +380,11 @@ private fun CartaoProximaDose(
                     .height(40.dp),
                 shape = RoundedCornerShape(20.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = VerdeMedicamentos,
-                    disabledContainerColor = LinhaMedicamentos
+                    containerColor = verdePrincipal,
+                    disabledContainerColor = borda
                 )
             ) {
-                Text("Marcar como tomado", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Text("Marcar como tomado", color = branco, fontSize = 12.sp, fontWeight = FontWeight.Bold)
             }
             Image(
                 painter = painterResource(R.drawable.onca_comprimido),
@@ -414,9 +407,9 @@ private fun LinhaMedicamento(medicamento: MedicamentoSalvo) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         val corFundo = when {
-            medicamento.nome.contains("metformina", ignoreCase = true) -> Color(0xFFFFF0ED)
-            medicamento.nome.contains("vitamina", ignoreCase = true) -> Color(0xFFFFF7DE)
-            else -> VerdeClaroMedicamentos
+            medicamento.nome.contains("metformina", ignoreCase = true) -> vermelhoClaro
+            medicamento.nome.contains("vitamina", ignoreCase = true) -> amareloClaro
+            else -> verdeClaro
         }
         Surface(
             modifier = Modifier.size(38.dp),
@@ -437,7 +430,7 @@ private fun LinhaMedicamento(medicamento: MedicamentoSalvo) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     medicamento.nome,
-                    color = TextoMedicamentos,
+                    color = textoPrimario,
                     fontWeight = FontWeight.Bold,
                     fontSize = 13.sp,
                     maxLines = 1,
@@ -445,18 +438,18 @@ private fun LinhaMedicamento(medicamento: MedicamentoSalvo) {
                     modifier = Modifier.weight(1f)
                 )
                 if (medicamento.tomadoEm == LocalDate.now().toString()) {
-                    Text("Tomado", color = VerdeMedicamentos, fontWeight = FontWeight.Bold, fontSize = 10.sp)
+                    Text("Tomado", color = verdePrincipal, fontWeight = FontWeight.Bold, fontSize = 10.sp)
                 }
             }
             Text(
                 "${medicamento.dosagem} - ${medicamento.horario}",
-                color = TextoSuaveMedicamentos,
+                color = textoSecundario,
                 fontSize = 11.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
         }
-        Text(">", color = TextoMedicamentos, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+        Text(">", color = textoPrimario, fontSize = 22.sp, fontWeight = FontWeight.Bold)
     }
 }
 
@@ -473,10 +466,10 @@ private fun EstadoVazioMedicamentos() {
             contentDescription = "Comprimido",
             modifier = Modifier.size(44.dp)
         )
-        Text("Nenhum medicamento cadastrado", color = TextoMedicamentos, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+        Text("Nenhum medicamento cadastrado", color = textoPrimario, fontWeight = FontWeight.Bold, fontSize = 14.sp)
         Text(
             "Adicione o primeiro lembrete para acompanhar seus horarios.",
-            color = TextoSuaveMedicamentos,
+            color = textoSecundario,
             fontSize = 11.sp,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(top = 4.dp)
@@ -491,7 +484,7 @@ private fun DivisorMedicamentos() {
             .fillMaxWidth()
             .padding(start = 64.dp, end = 14.dp)
             .height(1.dp)
-            .background(LinhaMedicamentos)
+            .background(borda)
     )
 }
 
@@ -501,7 +494,7 @@ private fun CartaoDicaMedicamentos() {
         modifier = Modifier
             .fillMaxWidth()
             .height(76.dp),
-        color = Color.White,
+        color = branco,
         shape = RoundedCornerShape(18.dp),
         shadowElevation = 1.dp
     ) {
@@ -511,24 +504,24 @@ private fun CartaoDicaMedicamentos() {
         ) {
             Surface(
                 modifier = Modifier.size(42.dp),
-                color = VerdeClaroMedicamentos,
+                color = verdeClaro,
                 shape = CircleShape
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Text("+", color = VerdeMedicamentos, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                    Text("+", color = verdePrincipal, fontSize = 24.sp, fontWeight = FontWeight.Bold)
                 }
             }
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
-                Text("Dica da Ada para Dona Maria", color = VerdeMedicamentos, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                Text("Dica da Ada para Dona Maria", color = verdePrincipal, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                 Text(
                     "Tome seus medicamentos sempre nos horarios certos e cuide da sua saude!",
-                    color = TextoSuaveMedicamentos,
+                    color = textoSecundario,
                     fontSize = 11.sp,
                     lineHeight = 14.sp
                 )
             }
-            Text(">", color = TextoMedicamentos, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+            Text(">", color = textoPrimario, fontSize = 22.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -544,7 +537,10 @@ private fun TelaAdicionarMedicamento(
     var alarmeAtivo by remember { mutableStateOf(true) }
     var erro by remember { mutableStateOf("") }
 
-    Scaffold(containerColor = FundoMedicamentos) { espaco ->
+    Scaffold(
+        containerColor = fundoPrincipal,
+        contentWindowInsets = WindowInsets(0.dp)
+    ) { espaco ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -558,20 +554,20 @@ private fun TelaAdicionarMedicamento(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(Color.White)
+                        .background(branco)
                 ) {
-                    Text("<", color = VerdeMedicamentos, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                    Text("<", color = verdePrincipal, fontSize = 22.sp, fontWeight = FontWeight.Bold)
                 }
                 Spacer(Modifier.width(12.dp))
                 Column {
-                    Text("Adicionar medicamento", color = VerdeEscuroMedicamentos, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                    Text("Configure nome, dosagem e horario.", color = TextoSuaveMedicamentos, fontSize = 12.sp)
+                    Text("Adicionar medicamento", color = verdeEscuro, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text("Configure nome, dosagem e horario.", color = textoSecundario, fontSize = 12.sp)
                 }
             }
             Spacer(Modifier.height(18.dp))
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                color = Color.White,
+                color = branco,
                 shape = RoundedCornerShape(18.dp),
                 shadowElevation = 1.dp
             ) {
@@ -608,17 +604,17 @@ private fun TelaAdicionarMedicamento(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(Modifier.weight(1f)) {
-                            Text("Alarme de lembrete", color = TextoMedicamentos, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                            Text("Receber aviso no horario informado", color = TextoSuaveMedicamentos, fontSize = 11.sp)
+                            Text("Alarme de lembrete", color = textoPrimario, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                            Text("Receber aviso no horario informado", color = textoSecundario, fontSize = 11.sp)
                         }
                         Switch(
                             checked = alarmeAtivo,
                             onCheckedChange = { alarmeAtivo = it },
-                            colors = SwitchDefaults.colors(checkedThumbColor = VerdeMedicamentos)
+                            colors = SwitchDefaults.colors(checkedThumbColor = verdePrincipal)
                         )
                     }
                     if (erro.isNotBlank()) {
-                        Text(erro, color = VermelhoMedicamentos, fontSize = 12.sp)
+                        Text(erro, color = vermelhoPrincipal, fontSize = 12.sp)
                     }
                     Button(
                         onClick = {
@@ -633,84 +629,13 @@ private fun TelaAdicionarMedicamento(
                             .fillMaxWidth()
                             .height(50.dp),
                         shape = RoundedCornerShape(25.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = VerdeMedicamentos)
+                        colors = ButtonDefaults.buttonColors(containerColor = verdePrincipal)
                     ) {
-                        Text("Salvar medicamento", color = Color.White, fontWeight = FontWeight.Bold)
+                        Text("Salvar medicamento", color = branco, fontWeight = FontWeight.Bold)
                     }
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun BarraInferiorMedicamentos(
-    aoAbrirInicio: () -> Unit,
-    aoAdicionar: () -> Unit,
-    aoAbrirExames: () -> Unit
-) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .navigationBarsPadding(),
-        color = Color.White,
-        shadowElevation = 6.dp
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(62.dp)
-                .padding(horizontal = 6.dp),
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            ItemMenuMedicamentos("Inicio", R.drawable.house_building, false, aoAbrirInicio)
-            ItemMenuMedicamentos("Monitorar", R.drawable.heart_green, false, {})
-            FloatingActionButton(
-                onClick = aoAdicionar,
-                containerColor = VerdeMedicamentos,
-                contentColor = Color.White,
-                modifier = Modifier.size(48.dp)
-            ) {
-                Text("+", fontSize = 26.sp, fontWeight = FontWeight.Light)
-            }
-            ItemMenuMedicamentos("Exames", R.drawable.list, false, aoAbrirExames)
-            ItemMenuMedicamentos("Perfil", R.drawable.user, false, {})
-        }
-    }
-}
-
-@Composable
-private fun ItemMenuMedicamentos(
-    titulo: String,
-    icone: Int,
-    selecionado: Boolean,
-    aoClicar: () -> Unit
-) {
-    val corItem = if (selecionado) VerdeMedicamentos else TextoSuaveMedicamentos
-    Column(
-        modifier = Modifier
-            .width(58.dp)
-            .clickable(onClick = aoClicar),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Image(
-            painter = painterResource(icone),
-            contentDescription = titulo,
-            contentScale = ContentScale.Fit,
-            modifier = Modifier
-                .size(22.dp)
-                .clip(if (titulo == "Perfil") CircleShape else RoundedCornerShape(4.dp))
-        )
-        Spacer(Modifier.height(2.dp))
-        Text(
-            titulo,
-            color = corItem,
-            fontSize = 9.sp,
-            maxLines = 1,
-            overflow = TextOverflow.Clip,
-            textAlign = TextAlign.Center
-        )
     }
 }
 
