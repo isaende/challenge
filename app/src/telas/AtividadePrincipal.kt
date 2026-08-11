@@ -1,5 +1,7 @@
 package home_page
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -25,6 +27,7 @@ import kotlinx.coroutines.launch
 
 private enum class TelaAtual {
     INICIO,
+    TELEMEDICINA,
     CHAT_MEDICO,
     EXAMES,
     MEDICAMENTOS,
@@ -137,6 +140,7 @@ class AtividadePrincipal : ComponentActivity() {
                     when (telaAtual) {
                     TelaAtual.INICIO -> TelaInicio(
                         aoAbrirChatMedico = { telaAtual = TelaAtual.CHAT_MEDICO },
+                        aoAbrirTelemedicina = { telaAtual = TelaAtual.TELEMEDICINA },
                         aoAbrirExames = { telaAtual = TelaAtual.EXAMES },
                         aoAbrirMedicamentos = { telaAtual = TelaAtual.MEDICAMENTOS },
                         aoAbrirEmergencia = { telaAtual = TelaAtual.EMERGENCIA },
@@ -152,6 +156,16 @@ class AtividadePrincipal : ComponentActivity() {
                     TelaAtual.CHAT_MEDICO -> TelaChatMedico(
                         repositorio = repositorio,
                         aoVoltar = { telaAtual = TelaAtual.INICIO }
+                    )
+
+                    TelaAtual.TELEMEDICINA -> TelaTelemedicina(
+                        aoVoltarInicio = { telaAtual = TelaAtual.INICIO },
+                        aoAbrirChatAda = { telaAtual = TelaAtual.CHAT_MEDICO },
+                        aoAbrirVideo = { url ->
+                            if (url.isNotBlank()) {
+                                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                            }
+                        }
                     )
 
                     TelaAtual.EXAMES -> TelaExames(

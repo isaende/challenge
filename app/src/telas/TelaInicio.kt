@@ -62,6 +62,7 @@ data class ItemAcaoRapida(
 @Composable
 fun TelaInicio(
     aoAbrirChatMedico: () -> Unit,
+    aoAbrirTelemedicina: () -> Unit = {},
     aoAbrirExames: () -> Unit = {},
     aoAbrirMedicamentos: () -> Unit = {},
     aoAbrirEmergencia: () -> Unit = {},
@@ -94,6 +95,7 @@ fun TelaInicio(
             CabecalhoInicio()
             CorpoInicio(
                 aoAbrirChatMedico = aoAbrirChatMedico,
+                aoAbrirTelemedicina = aoAbrirTelemedicina,
                 aoAbrirExames = aoAbrirExames,
                 aoAbrirMedicamentos = aoAbrirMedicamentos,
                 aoAbrirEmergencia = aoAbrirEmergencia,
@@ -164,6 +166,7 @@ private fun CabecalhoInicio() {
 @Composable
 private fun CorpoInicio(
     aoAbrirChatMedico: () -> Unit,
+    aoAbrirTelemedicina: () -> Unit,
     aoAbrirExames: () -> Unit,
     aoAbrirMedicamentos: () -> Unit,
     aoAbrirEmergencia: () -> Unit,
@@ -191,6 +194,7 @@ private fun CorpoInicio(
         )
         CartaoAdaAi(aoAbrirChatMedico)
         BlocoAcoesRapidas(
+            aoAbrirTelemedicina = aoAbrirTelemedicina,
             aoAbrirExames = aoAbrirExames,
             aoAbrirMedicamentos = aoAbrirMedicamentos,
             aoAbrirEmergencia = aoAbrirEmergencia,
@@ -408,6 +412,7 @@ private fun CartaoAdaAi(aoAbrirChatMedico: () -> Unit) {
 
 @Composable
 private fun BlocoAcoesRapidas(
+    aoAbrirTelemedicina: () -> Unit,
     aoAbrirExames: () -> Unit,
     aoAbrirMedicamentos: () -> Unit,
     aoAbrirEmergencia: () -> Unit,
@@ -415,7 +420,7 @@ private fun BlocoAcoesRapidas(
     aoAbrirExercicios: () -> Unit
 ) {
     val acoes = listOf(
-        ItemAcaoRapida("Telemedicina", R.drawable.buy_online, verdePrincipal),
+        ItemAcaoRapida("Telemedicina", R.drawable.buy_online, verdePrincipal, aoAbrirTelemedicina),
         ItemAcaoRapida("Exames", R.drawable.doctor_notes, azulPrincipal, aoAbrirExames),
         ItemAcaoRapida("Medicamentos", R.drawable.drugs, verdePrincipal, aoAbrirMedicamentos),
         ItemAcaoRapida("Emergencia", R.drawable.medicine, vermelhoPrincipal, aoAbrirEmergencia),
