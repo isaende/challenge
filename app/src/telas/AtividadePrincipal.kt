@@ -51,7 +51,7 @@ class AtividadePrincipal : ComponentActivity() {
                 RepositorioSaudeHealthConnect(this@AtividadePrincipal)
             }
 
-            // atualiza os dados com base no heath connect se ele estiver instalado, se não estiver ele solicita
+            // atualiza os dados com base no health connect se ele estiver instalado, se não estiver ele solicita
             // a instalação ou atualização
             fun atualizarDadosSaude() {
                 escopo.launch {
@@ -65,7 +65,7 @@ class AtividadePrincipal : ComponentActivity() {
                         return@launch
                     }
 
-                    // verifica se tem permissões para usar os dados do heath connect
+                    // verifica se tem permissões para usar os dados do health connect
                     if (!repositorioSaude.temPermissoes()) {
                         statusSaude = "Permissao necessaria para ler seus dados"
                         mostrarBotaoConectarSaude = true

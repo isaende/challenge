@@ -84,11 +84,12 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlin.coroutines.cancellation.CancellationException
 
-const val URL_BASE_SERVIDOR_CHAT = "http://10.0.2.2:8080"
-private const val CAMINHO_CHAT_MEDICO = "/api/chat-medico"
+const val URL_BASE_OLLAMA = "http://10.0.2.2:11434"
+private const val CAMINHO_CHAT_OLLAMA = "/api/chat"
+private const val MODELO_OLLAMA = "medgemma1.5:4b"
 private const val LIMITE_MENSAGEM = 2000
 private const val TEXTO_AVISO = "Este chat fornece informações educativas e não substitui avaliação de um profissional de saúde."
-private const val TEXTO_INICIAL = "Olá! Posso ajudar com explicações gerais sobre saúde e exames. Não faço diagnóstico, não prescrevo medicamentos e não substituo uma consulta médica."
+private const val TEXTO_INICIAL = "Olá! Posso ajudar com explicações gerais sobre saúde e exames. Qual a sua dúvida?"
 private const val TEXTO_ERRO = "Não foi possível responder agora. Tente novamente."
 private const val TEXTO_ERRO_TAMANHO = "Mensagem muito longa. Resuma sua dúvida."
 private const val TEXTO_CARREGANDO = "Ada está preparando uma resposta educativa..."
@@ -123,40 +124,76 @@ data class EstadoChatMedico(
 )
 
 @Serializable
-private data class PedidoChatRede(val mensagem: String)
+private data class PedidoOllama(
+    val model: String,
+    val stream: Boolean,
+    val messages: List<MensagemOllama>,
+    val options: OpcoesOllama
+)
 
 @Serializable
-private data class RespostaChatRede(val resposta: String, val tipo: String)
+private data class MensagemOllama(
+    val role: String,
+    val content: String
+)
+
+@Serializable
+private data class OpcoesOllama(val temperature: Double)
+
+@Serializable
+private data class RespostaOllama(val message: MensagemOllama? = null)
 
 interface RepositorioChatMedico {
     suspend fun enviarMensagem(mensagem: String): RespostaChatMedico
 }
 
-class RepositorioChatMedicoServidor(
-    private val urlBase: String = URL_BASE_SERVIDOR_CHAT,
+class RepositorioChatMedicoOllama(
+    private val urlBase: String = URL_BASE_OLLAMA,
     private val cliente: HttpClient = criarClienteHttp()
 ) : RepositorioChatMedico {
     override suspend fun enviarMensagem(mensagem: String): RespostaChatMedico {
-        val resposta = cliente.post(urlBase.trimEnd('/') + CAMINHO_CHAT_MEDICO) {
+        val resposta = cliente.post(urlBase.trimEnd('/') + CAMINHO_CHAT_OLLAMA) {
             contentType(ContentType.Application.Json)
-            setBody(PedidoChatRede(mensagem))
-        }.body<RespostaChatRede>()
+            setBody(
+                PedidoOllama(
+                    model = MODELO_OLLAMA,
+                    stream = false,
+                    messages = listOf(
+                        MensagemOllama("system", PROMPT_MEDICO),
+                        MensagemOllama("user", mensagem)
+                    ),
+                    options = OpcoesOllama(temperature = 0.2)
+                )
+            )
+        }.body<RespostaOllama>()
+
+        val texto = resposta.message?.content.orEmpty().somenteRespostaFinal()
 
         return RespostaChatMedico(
-            texto = resposta.resposta.ifBlank { TEXTO_ERRO },
-            tipo = when (resposta.tipo.lowercase()) {
-                "educativo" -> TipoRespostaMedica.EDUCATIVO
-                "urgencia" -> TipoRespostaMedica.URGENCIA
-                "recusa_segura" -> TipoRespostaMedica.RECUSA_SEGURA
-                else -> TipoRespostaMedica.ERRO
-            }
+            texto = texto.ifBlank { TEXTO_ERRO },
+            tipo = if (texto.isBlank()) TipoRespostaMedica.ERRO else TipoRespostaMedica.EDUCATIVO
         )
     }
 }
 
-fun criarRepositorioChatMedico(urlBase: String = URL_BASE_SERVIDOR_CHAT): RepositorioChatMedico {
-    return RepositorioChatMedicoServidor(urlBase = urlBase)
+fun criarRepositorioChatMedico(urlBase: String = URL_BASE_OLLAMA): RepositorioChatMedico {
+    return RepositorioChatMedicoOllama(urlBase = urlBase)
 }
+
+private fun String.somenteRespostaFinal(): String {
+    return substringAfterLast("<unused95>", this)
+        .replace("<unused\\d+>".toRegex(), "")
+        .trim()
+}
+
+private const val PROMPT_MEDICO = """
+Voce e Ada, uma assistente de educacao em saude.
+
+Responda em portugues do Brasil, de forma clara e objetiva. Forneca apenas informacoes gerais e educativas.
+Nao realize diagnosticos, nao prescreva medicamentos, nao indique doses e nao oriente mudancas de tratamento.
+Quando houver sinais de emergencia, recomende atendimento imediato. Em temas de saude, deixe claro que a resposta
+nao substitui a avaliacao de um profissional de saude.
+"""
 
 private fun criarClienteHttp(): HttpClient {
     return HttpClient(OkHttp) {
