@@ -136,7 +136,7 @@ class AtividadePrincipal : ComponentActivity() {
                     fontScale = densidadeAtual.fontScale * 1.19f
                 )
             ) {
-                MaterialTheme {
+                MaterialTheme(typography = TipografiaAplicativo) {
                     when (telaAtual) {
                     TelaAtual.INICIO -> TelaInicio(
                         aoAbrirChatMedico = { telaAtual = TelaAtual.CHAT_MEDICO },

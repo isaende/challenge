@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.FileProvider
 import androidx.compose.foundation.BorderStroke
@@ -125,25 +126,35 @@ fun TelaExames(
     var nomeArquivoEscolhido by remember { mutableStateOf("") }
     var nomeDigitado by remember { mutableStateOf("") }
     var dataDigitada by remember { mutableStateOf(LocalDate.now().format(FormatoDataExame)) }
+    var mostrarOpcoesEnvio by remember { mutableStateOf(false) }
 
-    // permite dar upload no arquivo (imagem ou pdf)
-    val escolherArquivo = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument()
-    ) { enderecoArquivo ->
-        if (enderecoArquivo != null) {
+    fun prepararArquivo(enderecoArquivo: Uri, manterPermissao: Boolean) {
+        if (manterPermissao) {
             runCatching {
                 contexto.contentResolver.takePersistableUriPermission(
                     enderecoArquivo,
                     Intent.FLAG_GRANT_READ_URI_PERMISSION
                 )
             }
-            arquivoEscolhido = enderecoArquivo
-            tipoArquivoEscolhido = contexto.contentResolver.getType(enderecoArquivo).orEmpty()
-            nomeArquivoEscolhido = nomeArquivo(contexto, enderecoArquivo)
-            nomeDigitado = nomeArquivoEscolhido.substringBeforeLast('.', nomeArquivoEscolhido)
-                .ifBlank { "Novo exame" }
-            dataDigitada = LocalDate.now().format(FormatoDataExame)
         }
+        arquivoEscolhido = enderecoArquivo
+        tipoArquivoEscolhido = contexto.contentResolver.getType(enderecoArquivo).orEmpty()
+        nomeArquivoEscolhido = nomeArquivo(contexto, enderecoArquivo)
+        nomeDigitado = nomeArquivoEscolhido.substringBeforeLast('.', nomeArquivoEscolhido)
+            .ifBlank { "Novo exame" }
+        dataDigitada = LocalDate.now().format(FormatoDataExame)
+    }
+
+    val escolherFotoGaleria = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { enderecoArquivo ->
+        if (enderecoArquivo != null) prepararArquivo(enderecoArquivo, manterPermissao = false)
+    }
+
+    val escolherPdf = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { enderecoArquivo ->
+        if (enderecoArquivo != null) prepararArquivo(enderecoArquivo, manterPermissao = true)
     }
 
     if (exameSelecionado != null) {
@@ -163,7 +174,7 @@ fun TelaExames(
             BarraInferiorPadrao(
                 itemSelecionado = ItemBarraInferior.EXAMES,
                 aoAbrirInicio = aoVoltarInicio,
-                aoAdicionar = { escolherArquivo.launch(arrayOf("image/*", "application/pdf")) }
+                aoAdicionar = { mostrarOpcoesEnvio = true }
             )
         }
     ) { espaco ->
@@ -175,13 +186,13 @@ fun TelaExames(
                 .padding(horizontal = 18.dp)
         ) {
             CabecalhoExames(
-                aoVoltarInicio = aoVoltarInicio,
-                aoNovoExame = { escolherArquivo.launch(arrayOf("image/*", "application/pdf")) }
+                aoVoltarInicio = aoVoltarInicio
             )
+            Spacer(Modifier.height(4.dp))
             AbasExames()
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(16.dp))
             CartaoAvisoExames()
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(14.dp))
             ListaExamesEnviados(
                 exames = exames,
                 aoSelecionar = { exameSelecionado = it },
@@ -189,7 +200,7 @@ fun TelaExames(
             )
             Spacer(Modifier.height(12.dp))
             Button(
-                onClick = { escolherArquivo.launch(arrayOf("image/*", "application/pdf")) },
+                onClick = { mostrarOpcoesEnvio = true },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp)
@@ -200,11 +211,52 @@ fun TelaExames(
             ) {
                 Text("+", color = branco, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.width(8.dp))
-                Text("Enviar novo exame", color = branco, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Text("Enviar novo exame", color = branco, style = TipografiaAplicativo.labelLarge)
             }
             Spacer(Modifier.height(10.dp))
             CartaoAjudaExames()
         }
+    }
+
+    if (mostrarOpcoesEnvio) {
+        AlertDialog(
+            onDismissRequest = { mostrarOpcoesEnvio = false },
+            title = { Text("Enviar novo exame") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text("Escolha de onde deseja enviar o exame.")
+                    Button(
+                        onClick = {
+                            mostrarOpcoesEnvio = false
+                            escolherFotoGaleria.launch(
+                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                            )
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Foto da galeria")
+                    }
+                    Button(
+                        onClick = {
+                            mostrarOpcoesEnvio = false
+                            escolherPdf.launch(arrayOf("application/pdf"))
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Arquivo PDF")
+                    }
+                    Text(
+                        "Use a seta de voltar do seletor para cancelar e retornar ao aplicativo.",
+                        color = textoSecundario,
+                        style = TipografiaAplicativo.bodySmall
+                    )
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { mostrarOpcoesEnvio = false }) { Text("Cancelar") }
+            }
+        )
     }
 
 
@@ -243,13 +295,12 @@ fun TelaExames(
 // parte de cima da tela, alterar "dona maria" para o nome usuario que estiver no banco de dados
 @Composable
 private fun CabecalhoExames(
-    aoVoltarInicio: () -> Unit,
-    aoNovoExame: () -> Unit
+    aoVoltarInicio: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 8.dp, bottom = 14.dp),
+            .padding(top = 10.dp, bottom = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         IconButton(
@@ -265,18 +316,10 @@ private fun CabecalhoExames(
             modifier = Modifier.weight(1f),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Meus Exames", color = verdeEscuro, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            Text("Dona Maria, acompanhe seus resultados.", color = textoSecundario, fontSize = 11.sp)
+            Text("Meus Exames", color = verdeEscuro, style = TipografiaAplicativo.titleLarge)
+            Text("Dona Maria, acompanhe seus resultados.", color = textoSecundario, style = TipografiaAplicativo.bodySmall)
         }
-        IconButton(
-            onClick = aoNovoExame,
-            modifier = Modifier
-                .size(42.dp)
-                .clip(RoundedCornerShape(14.dp))
-                .background(verdeClaro)
-        ) {
-            Text("^", color = verdePrincipal, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-        }
+        Spacer(Modifier.size(42.dp))
     }
 }
 
@@ -308,7 +351,7 @@ private fun AbaExame(texto: String, selecionada: Boolean, modificador: Modifier 
                 text = texto,
                 color = if (selecionada) branco else textoPrimario,
                 fontWeight = FontWeight.Bold,
-                fontSize = 12.sp
+                style = TipografiaAplicativo.labelMedium
             )
         }
     }
@@ -317,63 +360,10 @@ private fun AbaExame(texto: String, selecionada: Boolean, modificador: Modifier 
 // avisos da tela
 @Composable
 private fun CartaoAvisoExames() {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = branco,
-        shape = RoundedCornerShape(18.dp),
-        shadowElevation = 1.dp
-    ) {
-        Box(
-            modifier = Modifier
-                .background(
-                    Brush.horizontalGradient(
-                        listOf(branco, verdeClaro)
-                    )
-                )
-                .padding(14.dp)
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Image(
-                    painter = painterResource(R.drawable.onca_joia),
-                    contentDescription = "Ada",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .size(62.dp)
-                        .clip(CircleShape)
-                        .background(verdeClaro)
-                )
-                Spacer(Modifier.width(12.dp))
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        "Mantenha seus exames em dia!",
-                        color = textoPrimario,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 13.sp
-                    )
-                    Text(
-                        "Ada ajuda você ter acesso rápido ao seus exames para monitorar a saúde.",
-                        color = textoSecundario,
-                        fontSize = 11.sp,
-                        lineHeight = 14.sp
-                    )
-                }
-                Box(
-                    modifier = Modifier
-                        .size(38.dp)
-                        .clip(CircleShape)
-                        .background(verdePrincipal),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Image(
-                        painter = painterResource(R.drawable.heart_green),
-                        contentDescription = "Saude",
-                        contentScale = ContentScale.Fit,
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
-            }
-        }
-    }
+    BalaoDicaAda(
+        titulo = "Mantenha seus exames em dia!",
+        texto = "Ada ajuda você a ter acesso rápido aos seus exames para monitorar a saúde."
+    )
 }
 
 // lista com todos exames enviados
@@ -402,7 +392,7 @@ private fun ListaExamesEnviados(
                 Text(
                     "Envie uma foto ou PDF para guardar aqui.",
                     color = textoSecundario,
-                    fontSize = 12.sp,
+                    style = TipografiaAplicativo.bodySmall,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(top = 6.dp)
                 )
@@ -429,26 +419,29 @@ private fun LinhaExame(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = aoSelecionar)
-            .padding(horizontal = 16.dp, vertical = 13.dp),
+            .padding(horizontal = 16.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         IconeArquivo(tipoArquivo = exame.tipoArquivo)
         Spacer(Modifier.width(14.dp))
-        Column(Modifier.weight(1f)) {
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
             Text(
                 exame.nome,
                 color = textoPrimario,
                 fontWeight = FontWeight.Bold,
-                fontSize = 14.sp,
+                style = TipografiaAplicativo.titleSmall,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            Text(exame.data, color = textoSecundario, fontSize = 12.sp)
+            Text(exame.data, color = textoSecundario, style = TipografiaAplicativo.bodySmall)
             Text(
                 if (exame.tipoArquivo.startsWith("image/")) "Foto enviada" else "PDF enviado",
                 color = verdePrincipal,
                 fontWeight = FontWeight.Bold,
-                fontSize = 10.sp
+                style = TipografiaAplicativo.labelSmall
             )
         }
         Text(">", color = textoPrimario, fontSize = 24.sp, fontWeight = FontWeight.Bold)
@@ -476,7 +469,7 @@ private fun IconeArquivo(tipoArquivo: String) {
                 if (tipoArquivo.startsWith("image/")) "IMG" else "PDF",
                 color = cor,
                 fontWeight = FontWeight.Bold,
-                fontSize = 10.sp
+                style = TipografiaAplicativo.labelSmall
             )
         }
     }
@@ -561,8 +554,8 @@ private fun TelaDetalheExame(
                 }
                 Spacer(Modifier.width(12.dp))
                 Column {
-                    Text("Resultado do exame", color = verdeEscuro, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                    Text(exame.data, color = textoSecundario, fontSize = 12.sp)
+                    Text("Resultado do exame", color = verdeEscuro, style = TipografiaAplicativo.titleLarge)
+                    Text(exame.data, color = textoSecundario, style = TipografiaAplicativo.bodySmall)
                 }
             }
             Spacer(Modifier.height(18.dp))
@@ -575,9 +568,9 @@ private fun TelaDetalheExame(
                 Column(Modifier.padding(18.dp)) {
                     IconeArquivo(tipoArquivo = exame.tipoArquivo)
                     Spacer(Modifier.height(14.dp))
-                    Text(exame.nome, color = textoPrimario, fontWeight = FontWeight.Bold, fontSize = 20.sp)
-                    Text("Arquivo: ${exame.nomeArquivo}", color = textoSecundario, fontSize = 12.sp, modifier = Modifier.padding(top = 6.dp))
-                    Text("Data: ${exame.data}", color = textoSecundario, fontSize = 12.sp)
+                    Text(exame.nome, color = textoPrimario, style = TipografiaAplicativo.titleLarge)
+                    Text("Arquivo: ${exame.nomeArquivo}", color = textoSecundario, style = TipografiaAplicativo.bodySmall, modifier = Modifier.padding(top = 6.dp))
+                    Text("Data: ${exame.data}", color = textoSecundario, style = TipografiaAplicativo.bodySmall)
                     Spacer(Modifier.height(22.dp))
                     Button(
                         onClick = { abrirArquivoExame(contexto, exame) },
@@ -600,13 +593,13 @@ private fun CartaoAjudaExames() {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .height(62.dp),
+            .height(76.dp),
         color = branco,
         shape = RoundedCornerShape(18.dp),
         shadowElevation = 1.dp
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 14.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Surface(
@@ -619,9 +612,12 @@ private fun CartaoAjudaExames() {
                 }
             }
             Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Text("Precisa de ajuda?", color = verdePrincipal, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                Text("Nossa equipe esta pronta para te ajudar.", color = textoSecundario, fontSize = 11.sp)
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(3.dp)
+            ) {
+                Text("Precisa de ajuda?", color = verdePrincipal, style = TipografiaAplicativo.titleSmall)
+                Text("Nossa equipe esta pronta para te ajudar.", color = textoSecundario, style = TipografiaAplicativo.bodySmall)
             }
             Text(">", color = textoPrimario, fontSize = 22.sp, fontWeight = FontWeight.Bold)
         }

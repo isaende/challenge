@@ -125,17 +125,19 @@ private fun CabecalhoInicio() {
             .statusBarsPadding()
             .padding(start = 18.dp, end = 18.dp, top = 10.dp)
     ) {
-        Column(modifier = Modifier.align(Alignment.TopStart)) {
+        Column(
+            modifier = Modifier.align(Alignment.TopStart),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
             Text(
                 text = "Bom dia,",
                 color = branco,
-                fontSize = 14.sp
+                style = TipografiaAplicativo.bodyLarge
             )
             Text(
                 text = "Maria!",
                 color = branco,
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold
+                style = TipografiaAplicativo.titleLarge
             )
         }
 
@@ -236,23 +238,23 @@ private fun CartaoResumoSaude(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .shadow(3.dp, RoundedCornerShape(8.dp)),
+            .shadow(3.dp, RoundedCornerShape(14.dp)),
         color = branco,
-        shape = RoundedCornerShape(8.dp)
+        shape = RoundedCornerShape(14.dp)
     ) {
-        Column(Modifier.padding(12.dp)) {
+        Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(
-                        text = "Resumo da sua saude",
+                        text = "Resumo da sua saúde",
                         color = textoPrimario,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
+                        style = TipografiaAplicativo.titleSmall
                     )
                     Text(
                         text = statusSaude,
                         color = textoSecundario,
-                        fontSize = 10.sp,
+                        style = TipografiaAplicativo.bodySmall,
                         modifier = Modifier.padding(top = 2.dp)
                     )
                 }
@@ -266,14 +268,14 @@ private fun CartaoResumoSaude(
                         Text(
                             text = textoBotaoSaude,
                             color = branco,
-                            fontSize = 11.sp,
+                            style = TipografiaAplicativo.labelMedium,
                             fontWeight = FontWeight.Bold
                         )
                     }
                 }
             }
-            Spacer(Modifier.height(10.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Spacer(Modifier.height(14.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 itensResumo.forEach { item ->
                     CartaoItemSaude(
                         item = item,
@@ -291,13 +293,13 @@ private fun CartaoItemSaude(
     modifier: Modifier = Modifier
 ) {
     Surface(
-        modifier = modifier.height(96.dp),
+        modifier = modifier.height(108.dp),
         color = branco,
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(12.dp),
         border = androidx.compose.foundation.BorderStroke(1.dp, borda)
     ) {
         Column(
-            modifier = Modifier.padding(9.dp),
+            modifier = Modifier.padding(11.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             CirculoComImagem(
@@ -310,8 +312,7 @@ private fun CartaoItemSaude(
                 Text(
                     text = item.titulo,
                     color = textoSecundario,
-                    fontSize = 9.sp,
-                    lineHeight = 10.sp,
+                    style = TipografiaAplicativo.labelSmall,
                     maxLines = 2,
                     overflow = TextOverflow.Clip
                 )
@@ -319,7 +320,7 @@ private fun CartaoItemSaude(
                     text = item.valor,
                     color = textoPrimario,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp,
+                    style = TipografiaAplicativo.bodyMedium,
                     maxLines = 1,
                     overflow = TextOverflow.Clip
                 )
@@ -336,7 +337,7 @@ private fun CartaoAdaAi(aoAbrirChatMedico: () -> Unit) {
             .height(200.dp)
             .clickable(onClick = aoAbrirChatMedico),
         color = verdeEscuro,
-        shape = RoundedCornerShape(8.dp)
+        shape = RoundedCornerShape(14.dp)
     ) {
         Box(
             modifier = Modifier.background(
@@ -362,8 +363,7 @@ private fun CartaoAdaAi(aoAbrirChatMedico: () -> Unit) {
                     Text(
                         text = "Ada AI",
                         color = branco,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
+                        style = TipografiaAplicativo.titleSmall
                     )
                     Spacer(Modifier.weight(1f))
                     Text(
@@ -374,10 +374,9 @@ private fun CartaoAdaAi(aoAbrirChatMedico: () -> Unit) {
                     )
                 }
                 Text(
-                    text = "Detectamos alteracao leve no seu padrao de sono esta semana.",
+                    text = "Tire suas dúvidas com a Ada AI, nosso chat bot de saúde personalizado para você",
                     color = branco,
-                    fontSize = 13.sp,
-                    lineHeight = 18.sp,
+                    style = TipografiaAplicativo.bodyMedium,
                     modifier = Modifier.padding(top = 18.dp)
                 )
                 Spacer(Modifier.weight(1f))
@@ -390,8 +389,7 @@ private fun CartaoAdaAi(aoAbrirChatMedico: () -> Unit) {
                     Text(
                         text = "Ver detalhes",
                         color = verdeEscuro,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold
+                        style = TipografiaAplicativo.labelLarge
                     )
                 }
             }
@@ -423,7 +421,7 @@ private fun BlocoAcoesRapidas(
         ItemAcaoRapida("Telemedicina", R.drawable.buy_online, verdePrincipal, aoAbrirTelemedicina),
         ItemAcaoRapida("Exames", R.drawable.doctor_notes, azulPrincipal, aoAbrirExames),
         ItemAcaoRapida("Medicamentos", R.drawable.drugs, verdePrincipal, aoAbrirMedicamentos),
-        ItemAcaoRapida("Emergencia", R.drawable.medicine, vermelhoPrincipal, aoAbrirEmergencia),
+        ItemAcaoRapida("Emergência", R.drawable.medicine, vermelhoPrincipal, aoAbrirEmergencia),
         ItemAcaoRapida("Hidratação", R.drawable.agua, azulPrincipal, aoAbrirHidratacao),
         ItemAcaoRapida("Exercícios", R.drawable.relatorio_treino, verdePrincipal, aoAbrirExercicios)
     )
@@ -434,30 +432,25 @@ private fun BlocoAcoesRapidas(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Acoes rapidas",
+                text = "Ações rápidas",
                 color = textoPrimario,
                 fontWeight = FontWeight.Bold,
-                fontSize = 14.sp,
+                style = TipografiaAplicativo.titleSmall,
                 modifier = Modifier.weight(1f)
             )
-            Text(
-                text = "Editar",
-                color = verdePrincipal,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold
-            )
+
         }
         Spacer(Modifier.height(8.dp))
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            acoes.chunked(4).forEach { linha ->
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            acoes.chunked(3).forEach { linha ->
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     linha.forEach { acao ->
                         CartaoAcaoRapida(
                             acao = acao,
                             modifier = Modifier.weight(1f)
                         )
                     }
-                    repeat(4 - linha.size) {
+                    repeat(3 - linha.size) {
                         Spacer(Modifier.weight(1f))
                     }
                 }
@@ -473,14 +466,14 @@ private fun CartaoAcaoRapida(
 ) {
     Surface(
         modifier = modifier
-            .height(98.dp)
+            .height(112.dp)
             .clickable(onClick = acao.aoClicar),
         color = branco,
         shape = RoundedCornerShape(8.dp),
         shadowElevation = 1.dp
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 4.dp, vertical = 10.dp),
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
@@ -488,16 +481,15 @@ private fun CartaoAcaoRapida(
                 icone = acao.icone,
                 descricao = acao.titulo,
                 corFundo = acao.cor.copy(alpha = 0.12f),
-                tamanho = 40.dp
+                tamanho = 42.dp
             )
             Text(
                 text = acao.titulo,
                 color = textoPrimario,
-                fontSize = 9.sp,
-                lineHeight = 10.sp,
+                style = TipografiaAplicativo.labelSmall,
                 textAlign = TextAlign.Center,
                 maxLines = 2,
-                overflow = TextOverflow.Clip
+                overflow = TextOverflow.Ellipsis
             )
         }
     }

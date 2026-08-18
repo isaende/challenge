@@ -2,6 +2,7 @@ package home_page
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -27,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -65,8 +68,8 @@ fun TelaTelemedicina(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+                    .padding(horizontal = 18.dp, vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 CartaoDuvidasComAda(aoAbrirChatAda)
                 CartaoTeleconsulta(
@@ -85,12 +88,16 @@ private fun CabecalhoTelemedicina(aoVoltar: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .statusBarsPadding()
-            .height(76.dp)
-            .padding(horizontal = 10.dp)
+            .height(86.dp)
+            .padding(horizontal = 16.dp)
     ) {
         IconButton(
             onClick = aoVoltar,
-            modifier = Modifier.align(Alignment.CenterStart)
+            modifier = Modifier
+                .size(42.dp)
+                .align(Alignment.CenterStart)
+                .clip(CircleShape)
+                .background(verdeClaro)
         ) {
             Text("<", color = verdeEscuro, fontSize = 24.sp, fontWeight = FontWeight.Bold)
         }
@@ -101,14 +108,13 @@ private fun CabecalhoTelemedicina(aoVoltar: () -> Unit) {
             Text(
                 text = "TELEMEDICINA",
                 color = verdeEscuro,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
+                style = TipografiaAplicativo.titleMedium,
                 textAlign = TextAlign.Center
             )
             Text(
                 text = "Fale com um médico quando precisar",
                 color = textoSecundario,
-                fontSize = 11.sp,
+                style = TipografiaAplicativo.bodySmall,
                 textAlign = TextAlign.Center
             )
         }
@@ -120,17 +126,18 @@ private fun CartaoDuvidasComAda(aoAbrirChatAda: () -> Unit) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .height(222.dp),
+            .height(252.dp),
         color = branco,
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(14.dp),
         border = BorderStroke(1.dp, borda)
     ) {
         Box {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(16.dp)
-                    .padding(end = 118.dp)
+                    .padding(18.dp)
+                    .padding(end = 126.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 Surface(
                     color = verdeClaro,
@@ -139,29 +146,26 @@ private fun CartaoDuvidasComAda(aoAbrirChatAda: () -> Unit) {
                     Text(
                         text = "Mais usado por você",
                         color = verdeEscuro,
-                        fontSize = 9.sp,
+                        style = TipografiaAplicativo.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp)
                     )
                 }
                 Text(
                     text = "Dúvidas com a Ada",
                     color = textoPrimario,
-                    fontSize = 19.sp,
-                    lineHeight = 23.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(top = 8.dp)
+                    style = TipografiaAplicativo.titleLarge,
+                    modifier = Modifier.padding(top = 4.dp)
                 )
                 Text(
                     text = "Receba informações educativas sobre saúde, exames e medicamentos.",
                     color = textoSecundario,
-                    fontSize = 11.sp,
-                    lineHeight = 15.sp,
-                    modifier = Modifier.padding(top = 5.dp)
+                    style = TipografiaAplicativo.bodySmall
                 )
                 Spacer(Modifier.weight(1f))
                 Button(
                     onClick = aoAbrirChatAda,
+                    modifier = Modifier.height(44.dp),
                     contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = verdePrincipal),
                     shape = RoundedCornerShape(24.dp)
@@ -169,8 +173,7 @@ private fun CartaoDuvidasComAda(aoAbrirChatAda: () -> Unit) {
                     Text(
                         text = "Conversar com a Ada",
                         color = branco,
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold
+                        style = TipografiaAplicativo.labelLarge
                     )
                 }
             }
@@ -179,7 +182,7 @@ private fun CartaoDuvidasComAda(aoAbrirChatAda: () -> Unit) {
                 contentDescription = "Ada, assistente de saúde",
                 contentScale = ContentScale.Fit,
                 modifier = Modifier
-                    .size(112.dp)
+                    .size(120.dp)
                     .align(Alignment.CenterEnd)
                     .padding(end = 12.dp)
             )
@@ -195,43 +198,41 @@ private fun CartaoTeleconsulta(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .height(252.dp),
+            .height(282.dp),
         color = verdeClaro,
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(14.dp),
         border = BorderStroke(1.dp, borda)
     ) {
         Box {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(16.dp)
-                    .padding(end = 134.dp)
+                    .padding(18.dp)
+                    .padding(end = 142.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 Text(
                     text = "Atendimento online",
                     color = verdePrincipal,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold
+                    style = TipografiaAplicativo.labelMedium
                 )
                 Text(
                     text = "Teleconsulta com médico",
                     color = textoPrimario,
-                    fontSize = 20.sp,
-                    lineHeight = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(top = 8.dp)
+                    style = TipografiaAplicativo.titleLarge,
+                    modifier = Modifier.padding(top = 4.dp)
                 )
                 Text(
                     text = "Converse por vídeo com um profissional de saúde.",
                     color = textoSecundario,
-                    fontSize = 12.sp,
-                    lineHeight = 17.sp,
-                    modifier = Modifier.padding(top = 8.dp)
+                    style = TipografiaAplicativo.bodyMedium,
+                    modifier = Modifier.padding(top = 2.dp)
                 )
                 Spacer(Modifier.weight(1f))
                 Button(
                     onClick = aoIniciar,
                     enabled = urlDisponivel,
+                    modifier = Modifier.height(44.dp),
                     contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = verdePrincipal,
@@ -242,8 +243,7 @@ private fun CartaoTeleconsulta(
                     Text(
                         text = if (urlDisponivel) "Iniciar teleconsulta" else "Disponível em breve",
                         color = branco,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold
+                        style = TipografiaAplicativo.labelLarge
                     )
                 }
             }
@@ -252,7 +252,7 @@ private fun CartaoTeleconsulta(
                 contentDescription = "Medico da teleconsulta",
                 contentScale = ContentScale.Fit,
                 modifier = Modifier
-                    .size(174.dp)
+                    .size(184.dp)
                     .align(Alignment.BottomEnd)
                     .padding(end = 2.dp)
             )
@@ -262,36 +262,8 @@ private fun CartaoTeleconsulta(
 
 @Composable
 private fun CartaoDicaAda() {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(106.dp),
-        color = branco,
-        shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(1.dp, borda)
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = "Dica da Ada AI",
-                    color = verdeEscuro,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "Tire suas dúvidas rápidas antes que pequenos sintomas se tornem grandes problemas.",
-                    color = textoSecundario,
-                    fontSize = 11.sp,
-                    lineHeight = 15.sp,
-                    modifier = Modifier.padding(top = 3.dp)
-                )
-            }
-        }
-    }
+    BalaoDicaAda(
+        titulo = "Dica da Ada AI",
+        texto = "Tire suas dúvidas rápidas antes que pequenos sintomas se tornem grandes problemas."
+    )
 }

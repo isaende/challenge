@@ -123,8 +123,7 @@ private fun BotaoBarraInferior(item: ItemMenuPadrao) {
         Text(
             text = item.titulo,
             color = corItem,
-            fontSize = 9.sp,
-            lineHeight = 10.sp,
+            style = TipografiaAplicativo.labelSmall,
             textAlign = TextAlign.Center,
             maxLines = 1,
             overflow = TextOverflow.Clip

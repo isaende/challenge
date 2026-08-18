@@ -24,8 +24,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -189,7 +191,8 @@ fun TelaMedicamentos(
                 .padding(espaco)
                 .statusBarsPadding()
                 .padding(horizontal = 18.dp),
-            contentPadding = PaddingValues(bottom = 14.dp)
+            contentPadding = PaddingValues(bottom = 14.dp),
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
             item {
                 CabecalhoMedicamentos(aoVoltarInicio = aoVoltarInicio)
@@ -206,19 +209,19 @@ fun TelaMedicamentos(
                     "Meus medicamentos",
                     color = textoPrimario,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp,
+                    style = TipografiaAplicativo.titleSmall,
                     modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
                 )
             }
 
             item {
                 Surface(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 300.dp),
                     color = branco,
                     shape = RoundedCornerShape(18.dp),
                     border = BorderStroke(1.dp, borda)
                 ) {
-                    Column {
+                    Column(Modifier.fillMaxHeight()) {
                         if (medicamentos.isEmpty()) {
                             EstadoVazioMedicamentos()
                         } else {
@@ -227,6 +230,7 @@ fun TelaMedicamentos(
                                 if (indice != medicamentos.lastIndex) DivisorMedicamentos()
                             }
                         }
+                        Spacer(Modifier.weight(1f))
                         Button(
                             onClick = { exibindoFormulario = true },
                             modifier = Modifier
@@ -238,7 +242,7 @@ fun TelaMedicamentos(
                         ) {
                             Text("+", color = branco, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                             Spacer(Modifier.width(8.dp))
-                            Text("Adicionar medicamento", color = branco, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                            Text("Adicionar medicamento", color = branco, style = TipografiaAplicativo.labelLarge)
                         }
                     }
                 }
@@ -258,7 +262,7 @@ private fun CabecalhoMedicamentos(aoVoltarInicio: () -> Unit) {
         Text(
             "MEDICAMENTOS",
             color = verdeEscuro,
-            fontSize = 12.sp,
+            style = TipografiaAplicativo.labelMedium,
             fontWeight = FontWeight.Bold,
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
@@ -283,18 +287,10 @@ private fun CabecalhoMedicamentos(aoVoltarInicio: () -> Unit) {
                 modifier = Modifier.weight(1f),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("Medicamentos", color = verdeEscuro, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                Text("Dona Maria", color = textoSecundario, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                Text("Medicamentos", color = verdeEscuro, style = TipografiaAplicativo.titleLarge)
+                Text("Dona Maria", color = textoSecundario, style = TipografiaAplicativo.bodySmall)
             }
-            Box(
-                modifier = Modifier
-                    .size(38.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(branco),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("!", color = verdePrincipal, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            }
+            Spacer(Modifier.size(38.dp))
         }
     }
 }
@@ -307,33 +303,29 @@ private fun CartaoProximaDose(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .height(150.dp)
+            .height(176.dp)
             .shadow(1.dp, RoundedCornerShape(18.dp)),
         color = branco,
         shape = RoundedCornerShape(18.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .background(
-                    Brush.horizontalGradient(listOf(branco, verdeClaro))
-                )
-                .padding(14.dp)
-        ) {
+        Box(modifier = Modifier.padding(16.dp)) {
+            Column(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .fillMaxWidth()
+                    .padding(end = 108.dp),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
             Text(
                 "Proxima dose",
                 color = verdePrincipal,
-                fontWeight = FontWeight.Bold,
-                fontSize = 12.sp,
-                modifier = Modifier.align(Alignment.TopStart)
+                style = TipografiaAplicativo.labelMedium
             )
             Row(
-                modifier = Modifier
-                    .align(Alignment.CenterStart)
-                    .padding(top = 10.dp, end = 100.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Surface(
-                    modifier = Modifier.size(48.dp),
+                    modifier = Modifier.size(44.dp),
                     color = verdeClaro,
                     shape = CircleShape
                 ) {
@@ -342,57 +334,54 @@ private fun CartaoProximaDose(
                             painter = painterResource(R.drawable.comprimido),
                             contentDescription = "Comprimido",
                             contentScale = ContentScale.Fit,
-                            modifier = Modifier.size(30.dp)
+                            modifier = Modifier.size(28.dp)
                         )
                     }
                 }
-                Spacer(Modifier.width(12.dp))
+                Spacer(Modifier.width(10.dp))
                 Column {
                     Text(
                         medicamento?.nome ?: "Nenhum medicamento",
                         color = textoPrimario,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp,
+                        style = TipografiaAplicativo.titleSmall,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                     Text(
                         medicamento?.dosagem ?: "Adicione um lembrete",
                         color = textoSecundario,
-                        fontSize = 11.sp,
+                        style = TipografiaAplicativo.bodySmall,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                     Text(
                         if (medicamento != null) "Hoje as ${medicamento.horario}" else "--:--",
                         color = verdePrincipal,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 11.sp,
-                        modifier = Modifier.padding(top = 4.dp)
+                        style = TipografiaAplicativo.labelSmall,
+                        modifier = Modifier.padding(top = 2.dp)
                     )
                 }
             }
             Button(
                 onClick = aoMarcarTomado,
                 enabled = medicamento != null,
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .height(40.dp),
+                modifier = Modifier.height(40.dp),
                 shape = RoundedCornerShape(20.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = verdePrincipal,
                     disabledContainerColor = borda
                 )
             ) {
-                Text("Marcar como tomado", color = branco, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Text("Marcar como tomado", color = branco, style = TipografiaAplicativo.labelLarge)
+            }
             }
             Image(
                 painter = painterResource(R.drawable.onca_comprimido),
                 contentDescription = "Ada com medicamento",
                 contentScale = ContentScale.Fit,
                 modifier = Modifier
-                    .size(112.dp)
-                    .align(Alignment.BottomEnd)
+                    .size(108.dp)
+                    .align(Alignment.CenterEnd)
             )
         }
     }
@@ -432,19 +421,19 @@ private fun LinhaMedicamento(medicamento: MedicamentoSalvo) {
                     medicamento.nome,
                     color = textoPrimario,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp,
+                    style = TipografiaAplicativo.titleSmall,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f)
                 )
                 if (medicamento.tomadoEm == LocalDate.now().toString()) {
-                    Text("Tomado", color = verdePrincipal, fontWeight = FontWeight.Bold, fontSize = 10.sp)
+                    Text("Tomado", color = verdePrincipal, style = TipografiaAplicativo.labelSmall)
                 }
             }
             Text(
                 "${medicamento.dosagem} - ${medicamento.horario}",
                 color = textoSecundario,
-                fontSize = 11.sp,
+                style = TipografiaAplicativo.bodySmall,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -466,11 +455,11 @@ private fun EstadoVazioMedicamentos() {
             contentDescription = "Comprimido",
             modifier = Modifier.size(44.dp)
         )
-        Text("Nenhum medicamento cadastrado", color = textoPrimario, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+        Text("Nenhum medicamento cadastrado", color = textoPrimario, style = TipografiaAplicativo.titleSmall)
         Text(
             "Adicione o primeiro lembrete para acompanhar seus horarios.",
             color = textoSecundario,
-            fontSize = 11.sp,
+            style = TipografiaAplicativo.bodySmall,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(top = 4.dp)
         )
@@ -490,40 +479,11 @@ private fun DivisorMedicamentos() {
 
 @Composable
 private fun CartaoDicaMedicamentos() {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(76.dp),
-        color = branco,
-        shape = RoundedCornerShape(18.dp),
-        shadowElevation = 1.dp
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 14.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Surface(
-                modifier = Modifier.size(42.dp),
-                color = verdeClaro,
-                shape = CircleShape
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text("+", color = verdePrincipal, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-                }
-            }
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Text("Dica da Ada para Dona Maria", color = verdePrincipal, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                Text(
-                    "Tome seus medicamentos sempre nos horarios certos e cuide da sua saude!",
-                    color = textoSecundario,
-                    fontSize = 11.sp,
-                    lineHeight = 14.sp
-                )
-            }
-            Text(">", color = textoPrimario, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-        }
-    }
+    BalaoDicaAda(
+        titulo = "Dica da Ada para Dona Maria",
+        texto = "Tome seus medicamentos sempre nos horários certos e cuide da sua saúde!",
+        imagem = R.drawable.onca_comprimido
+    )
 }
 
 @Composable
@@ -560,8 +520,8 @@ private fun TelaAdicionarMedicamento(
                 }
                 Spacer(Modifier.width(12.dp))
                 Column {
-                    Text("Adicionar medicamento", color = verdeEscuro, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                    Text("Configure nome, dosagem e horario.", color = textoSecundario, fontSize = 12.sp)
+                    Text("Adicionar medicamento", color = verdeEscuro, style = TipografiaAplicativo.titleLarge)
+                    Text("Configure nome, dosagem e horario.", color = textoSecundario, style = TipografiaAplicativo.bodySmall)
                 }
             }
             Spacer(Modifier.height(18.dp))
@@ -604,8 +564,8 @@ private fun TelaAdicionarMedicamento(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(Modifier.weight(1f)) {
-                            Text("Alarme de lembrete", color = textoPrimario, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                            Text("Receber aviso no horario informado", color = textoSecundario, fontSize = 11.sp)
+                            Text("Alarme de lembrete", color = textoPrimario, style = TipografiaAplicativo.titleSmall)
+                            Text("Receber aviso no horario informado", color = textoSecundario, style = TipografiaAplicativo.bodySmall)
                         }
                         Switch(
                             checked = alarmeAtivo,
@@ -614,7 +574,7 @@ private fun TelaAdicionarMedicamento(
                         )
                     }
                     if (erro.isNotBlank()) {
-                        Text(erro, color = vermelhoPrincipal, fontSize = 12.sp)
+                        Text(erro, color = vermelhoPrincipal, style = TipografiaAplicativo.bodySmall)
                     }
                     Button(
                         onClick = {

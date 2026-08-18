@@ -111,8 +111,8 @@ fun TelaHidratacao(aoVoltar: () -> Unit, modifier: Modifier = Modifier) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(espacamento)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             CabecalhoHidratacao(aoVoltar)
             CartaoDestaqueHidratacao()
@@ -121,9 +121,8 @@ fun TelaHidratacao(aoVoltar: () -> Unit, modifier: Modifier = Modifier) {
                 aoAdicionar = ::adicionarAgua,
                 aoDigitarOutro = { mostrarValorManual = true }
             )
-            HistoricoHidratacao(registros)
+            HistoricoHidratacao(registros, Modifier.weight(1f))
             DicaHidratacao()
-            Spacer(Modifier.height(16.dp))
         }
     }
 
@@ -160,35 +159,18 @@ private fun CabecalhoHidratacao(aoVoltar: () -> Unit) {
             modifier = Modifier.align(Alignment.Center),
             color = verdePrincipal,
             fontWeight = FontWeight.Bold,
-            fontSize = 16.sp
+            style = TipografiaAplicativo.titleMedium
         )
-        Text("♢", modifier = Modifier.align(Alignment.CenterEnd), color = verdePrincipal, fontSize = 23.sp)
     }
 }
 
 @Composable
 private fun CartaoDestaqueHidratacao() {
-    Surface(
-        modifier = Modifier.fillMaxWidth().height(116.dp),
-        shape = RoundedCornerShape(14.dp),
-        color = verdeClaro
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Column(
-                modifier = Modifier.weight(1f).padding(start = 16.dp, top = 12.dp, bottom = 12.dp),
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text("Hidratação é\nenergia, foco e\nresultados! 💧", color = verdeEscuro, fontWeight = FontWeight.Bold, fontSize = 15.sp, lineHeight = 19.sp)
-                Text("Seu corpo agradece\ncada gole.", color = textoSecundario, fontSize = 10.sp, lineHeight = 13.sp, modifier = Modifier.padding(top = 3.dp))
-            }
-            Image(
-                painter = painterResource(R.drawable.onca_comprimido),
-                contentDescription = "Mascote Ada",
-                contentScale = ContentScale.Fit,
-                modifier = Modifier.width(146.dp).height(112.dp).padding(end = 8.dp)
-            )
-        }
-    }
+    BalaoDicaAda(
+        titulo = "Hidratação é energia, foco e resultados!",
+        texto = "Seu corpo agradece cada gole.",
+        imagem = R.drawable.onca_comprimido
+    )
 }
 
 @Composable
@@ -207,11 +189,11 @@ private fun IndicadorHidratacao(totalMl: Int, progresso: Float) {
                 style = Stroke(largura, cap = StrokeCap.Round)
             )
         }
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(3.dp)) {
             Image(painterResource(R.drawable.agua), "Gota de água", Modifier.size(32.dp))
             Text(formatarLitros(totalMl), color = textoPrimario, fontWeight = FontWeight.Bold, fontSize = 25.sp)
-            Text("de 2,5 L", color = textoSecundario, fontSize = 12.sp)
-            Text("${(progresso * 100).toInt()}%", color = verdePrincipal, fontWeight = FontWeight.Bold, fontSize = 13.sp, modifier = Modifier.padding(top = 4.dp))
+            Text("de 2,5 L", color = textoSecundario, style = TipografiaAplicativo.bodySmall)
+            Text("${(progresso * 100).toInt()}%", color = verdePrincipal, style = TipografiaAplicativo.labelLarge)
         }
     }
 }
@@ -233,7 +215,7 @@ private fun BotoesQuantidade(aoAdicionar: (Int) -> Unit, aoDigitarOutro: () -> U
             color = branco,
             border = androidx.compose.foundation.BorderStroke(1.dp, borda)
         ) {
-            Box(contentAlignment = Alignment.Center) { Text("◉ Outro", fontSize = 10.sp, fontWeight = FontWeight.SemiBold) }
+            Box(contentAlignment = Alignment.Center) { Text("Outro", style = TipografiaAplicativo.labelSmall) }
         }
     }
 }
@@ -249,27 +231,27 @@ private fun BotaoQuantidade(texto: String, icone: Int, modifier: Modifier, aoCli
         Row(horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
             Image(painterResource(icone), texto, Modifier.size(18.dp))
             Spacer(Modifier.width(3.dp))
-            Text(texto, fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
+            Text(texto, style = TipografiaAplicativo.labelSmall)
         }
     }
 }
 
 @Composable
-private fun HistoricoHidratacao(registros: List<RegistroAgua>) {
-    Surface(Modifier.fillMaxWidth().padding(top = 14.dp), RoundedCornerShape(12.dp), color = branco, shadowElevation = 1.dp) {
-        Column(Modifier.padding(14.dp)) {
+private fun HistoricoHidratacao(registros: List<RegistroAgua>, modifier: Modifier = Modifier) {
+    Surface(modifier.fillMaxWidth(), RoundedCornerShape(12.dp), color = branco, shadowElevation = 1.dp) {
+        Column(Modifier.padding(14.dp).verticalScroll(rememberScrollState())) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("▣  Histórico de hoje", fontWeight = FontWeight.Bold, fontSize = 12.sp, modifier = Modifier.weight(1f))
-                Text("Meta: 2,5 L", color = verdePrincipal, fontWeight = FontWeight.SemiBold, fontSize = 10.sp)
+                Text("Histórico de hoje", color = textoPrimario, style = TipografiaAplicativo.titleSmall, modifier = Modifier.weight(1f))
+                Text("Meta: 2,5 L", color = verdePrincipal, style = TipografiaAplicativo.labelSmall)
             }
             if (registros.isEmpty()) {
-                Text("Nenhum copo registrado ainda.", color = textoSecundario, fontSize = 11.sp, modifier = Modifier.padding(vertical = 18.dp).align(Alignment.CenterHorizontally))
+                Text("Nenhum copo registrado ainda.", color = textoSecundario, style = TipografiaAplicativo.bodySmall, modifier = Modifier.padding(vertical = 18.dp).align(Alignment.CenterHorizontally))
             } else {
                 registros.asReversed().forEach { registro ->
                     Row(Modifier.fillMaxWidth().padding(top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                         Image(painterResource(R.drawable.copo_de_agua), null, Modifier.size(18.dp))
-                        Text(registro.horario, color = textoSecundario, fontSize = 11.sp, modifier = Modifier.padding(start = 8.dp).width(48.dp))
-                        Text(formatarQuantidade(registro.quantidadeMl), fontSize = 11.sp, modifier = Modifier.weight(1f))
+                        Text(registro.horario, color = textoSecundario, style = TipografiaAplicativo.bodySmall, modifier = Modifier.padding(start = 8.dp).width(52.dp))
+                        Text(formatarQuantidade(registro.quantidadeMl), style = TipografiaAplicativo.bodySmall, modifier = Modifier.weight(1f))
                         Box(Modifier.size(16.dp).clip(CircleShape).background(verdePrincipal), contentAlignment = Alignment.Center) {
                             Text("✓", color = branco, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                         }
@@ -282,16 +264,11 @@ private fun HistoricoHidratacao(registros: List<RegistroAgua>) {
 
 @Composable
 private fun DicaHidratacao() {
-    Surface(Modifier.fillMaxWidth().padding(top = 12.dp), RoundedCornerShape(12.dp), color = fundoSecundario) {
-        Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Image(painterResource(R.drawable.onca_comprimido), "Ada AI", Modifier.size(48.dp))
-            Column(Modifier.padding(start = 10.dp).weight(1f)) {
-                Text("Dica da Ada AI", color = verdePrincipal, fontWeight = FontWeight.Bold, fontSize = 11.sp)
-                Text("Você treina pesado! 💪 Mantenha sua hidratação em dia para melhorar sua performance e recuperação.", color = textoSecundario, fontSize = 9.sp, lineHeight = 12.sp)
-            }
-            Text("›", fontSize = 24.sp, color = textoSecundario)
-        }
-    }
+    BalaoDicaAda(
+        titulo = "Dica da Ada AI",
+        texto = "Você treina pesado! Mantenha sua hidratação em dia para melhorar sua performance e recuperação.",
+        imagem = R.drawable.onca_comprimido
+    )
 }
 
 @Composable

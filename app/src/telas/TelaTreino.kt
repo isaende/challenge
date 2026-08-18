@@ -87,7 +87,7 @@ fun TelaTreino(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                 color = textoPrimario,
                 fontWeight = FontWeight.Bold,
-                fontSize = 17.sp,
+                style = TipografiaAplicativo.titleLarge,
                 textAlign = TextAlign.Center
             )
             CartaoPlanoPersonalizado()
@@ -103,7 +103,7 @@ fun TelaTreino(
                 Text(
                     if (concluido) "Treino concluído" else "Marcar como concluído",
                     fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp
+                    style = TipografiaAplicativo.labelLarge
                 )
             }
         }
@@ -127,7 +127,7 @@ private fun CabecalhoTreino(aoVoltar: () -> Unit) {
             modifier = Modifier.align(Alignment.Center),
             color = verdePrincipal,
             fontWeight = FontWeight.Bold,
-            fontSize = 14.sp
+            style = TipografiaAplicativo.titleSmall
         )
         Text(
             text = "⋮",
@@ -151,15 +151,17 @@ private fun CartaoPlanoPersonalizado() {
                 modifier = Modifier.weight(1f).padding(14.dp),
                 verticalArrangement = Arrangement.Center
             ) {
-                Text("Plano personalizado", color = branco, fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                Text("Semanal", color = verdeClaro, fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp))
+                Text("Plano personalizado", color = branco, style = TipografiaAplicativo.titleMedium)
+                Text("Semanal", color = verdeClaro, style = TipografiaAplicativo.bodySmall, modifier = Modifier.padding(top = 4.dp))
                 Surface(
-                    modifier = Modifier.padding(top = 12.dp),
+                    modifier = Modifier.padding(top = 12.dp).width(112.dp).height(36.dp),
                     color = transparente,
                     shape = RoundedCornerShape(16.dp),
                     border = BorderStroke(1.dp, borda)
                 ) {
-                    Text("Ver detalhes", color = branco, fontSize = 11.sp, modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp))
+                    Box(contentAlignment = Alignment.Center) {
+                        Text("Ver detalhes", color = branco, style = TipografiaAplicativo.labelMedium, textAlign = TextAlign.Center)
+                    }
                 }
             }
             Image(
@@ -181,9 +183,9 @@ private fun ConteudoTreinoDoDia(treino: TreinoDoDia) {
         shadowElevation = 1.dp
     ) {
         Column(Modifier.fillMaxWidth().padding(14.dp)) {
-            Text("Treino de hoje", color = textoPrimario, fontWeight = FontWeight.Bold, fontSize = 15.sp)
-            Text(treino.titulo, color = verdePrincipal, fontSize = 13.sp, modifier = Modifier.padding(top = 3.dp))
-            Text(treino.detalhe, color = textoSecundario, fontSize = 11.sp, modifier = Modifier.padding(top = 3.dp, bottom = 12.dp))
+            Text("Treino de hoje", color = textoPrimario, style = TipografiaAplicativo.titleMedium)
+            Text(treino.titulo, color = verdePrincipal, style = TipografiaAplicativo.bodyMedium, modifier = Modifier.padding(top = 3.dp))
+            Text(treino.detalhe, color = textoSecundario, style = TipografiaAplicativo.bodySmall, modifier = Modifier.padding(top = 3.dp, bottom = 12.dp))
             Image(
                 painter = painterResource(treino.imagem),
                 contentDescription = treino.titulo,
@@ -199,7 +201,7 @@ private fun ConteudoTreinoDoDia(treino: TreinoDoDia) {
                     text = "Recupere as energias para o próximo treino.",
                     modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
                     color = textoSecundario,
-                    fontSize = 12.sp,
+                    style = TipografiaAplicativo.bodySmall,
                     textAlign = TextAlign.Center
                 )
             }

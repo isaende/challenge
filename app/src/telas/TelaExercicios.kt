@@ -82,7 +82,8 @@ fun TelaExercicios(
                 .fillMaxSize()
                 .padding(espacamento)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             CabecalhoExercicios(aoVoltar)
             Text(
@@ -90,15 +91,14 @@ fun TelaExercicios(
                 modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
                 color = textoPrimario,
                 fontWeight = FontWeight.Bold,
-                fontSize = 16.sp,
+                style = TipografiaAplicativo.titleMedium,
                 textAlign = TextAlign.Center
             )
             SeletorHoje()
-            IndicadorPassos(passosHoje, progresso, carregando)
+            IndicadorPassos(passosHoje, progresso, carregando, Modifier.height(285.dp))
             ResumoPassos(passosRestantes, progresso)
             BotaoIniciarTreino(aoIniciarTreino)
             DicaAdaExercicios()
-            Spacer(Modifier.height(16.dp))
         }
     }
 }
@@ -121,12 +121,7 @@ private fun CabecalhoExercicios(aoVoltar: () -> Unit) {
             modifier = Modifier.align(Alignment.Center),
             color = verdePrincipal,
             fontWeight = FontWeight.Bold,
-            fontSize = 16.sp
-        )
-        Image(
-            painter = painterResource(R.drawable.relatorio_treino),
-            contentDescription = "Relatório de exercícios",
-            modifier = Modifier.size(30.dp).align(Alignment.CenterEnd)
+            style = TipografiaAplicativo.titleMedium
         )
     }
 }
@@ -145,11 +140,11 @@ private fun SeletorHoje() {
                 shape = RoundedCornerShape(18.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Text("Hoje", color = branco, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    Text("Hoje", color = branco, style = TipografiaAplicativo.labelMedium)
                 }
             }
-            Text("7 dias", modifier = Modifier.weight(1f), textAlign = TextAlign.Center, fontSize = 12.sp, color = textoSecundario)
-            Text("30 dias", modifier = Modifier.weight(1f), textAlign = TextAlign.Center, fontSize = 12.sp, color = textoSecundario)
+            Text("7 dias", modifier = Modifier.weight(1f), textAlign = TextAlign.Center, style = TipografiaAplicativo.labelMedium, color = textoSecundario)
+            Text("30 dias", modifier = Modifier.weight(1f), textAlign = TextAlign.Center, style = TipografiaAplicativo.labelMedium, color = textoSecundario)
         }
     }
 }
@@ -157,9 +152,9 @@ private fun SeletorHoje() {
 
 // indicador de passos com gráfico circular que acompanha a quantidade
 @Composable
-private fun IndicadorPassos(passos: Long, progresso: Float, carregando: Boolean) {
-    Box(Modifier.fillMaxWidth().height(220.dp), contentAlignment = Alignment.Center) {
-        Canvas(Modifier.size(176.dp)) {
+private fun IndicadorPassos(passos: Long, progresso: Float, carregando: Boolean, modifier: Modifier = Modifier) {
+    Box(modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+        Canvas(Modifier.size(184.dp)) {
             val largura = 11.dp.toPx()
             val margem = largura / 2
             val tamanhoArco = Size(size.width - largura, size.height - largura)
@@ -184,7 +179,7 @@ private fun IndicadorPassos(passos: Long, progresso: Float, carregando: Boolean)
                 )
             }
         }
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Image(painterResource(R.drawable.sapato), "Passos", Modifier.size(38.dp))
             Text(
                 if (carregando) "--" else formatarNumero(passos),
@@ -192,9 +187,9 @@ private fun IndicadorPassos(passos: Long, progresso: Float, carregando: Boolean)
                 fontWeight = FontWeight.Bold,
                 fontSize = 30.sp
             )
-            Text("passos", color = textoPrimario, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
-            Text("Meta: ${formatarNumero(MetaPassos)}", color = textoSecundario, fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp))
-            Text("${(progresso * 100).toInt()}%", color = verdePrincipal, fontWeight = FontWeight.Bold, fontSize = 16.sp, modifier = Modifier.padding(top = 5.dp))
+            Text("passos", color = textoPrimario, style = TipografiaAplicativo.bodyMedium)
+            Text("Meta: ${formatarNumero(MetaPassos)}", color = textoSecundario, style = TipografiaAplicativo.bodySmall)
+            Text("${(progresso * 100).toInt()}%", color = verdePrincipal, style = TipografiaAplicativo.titleMedium)
         }
     }
 }
@@ -215,7 +210,7 @@ private fun CartaoResumoPassos(titulo: String, valor: String, icone: Int, modifi
         Column(Modifier.padding(13.dp), verticalArrangement = Arrangement.SpaceBetween) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Image(painterResource(icone), null, Modifier.size(25.dp))
-                Text(titulo, color = textoSecundario, fontSize = 11.sp, modifier = Modifier.padding(start = 8.dp))
+                Text(titulo, color = textoSecundario, style = TipografiaAplicativo.bodySmall, modifier = Modifier.padding(start = 8.dp))
             }
             Text(valor, color = textoPrimario, fontSize = 22.sp, fontWeight = FontWeight.Bold)
         }
@@ -225,25 +220,31 @@ private fun CartaoResumoPassos(titulo: String, valor: String, icone: Int, modifi
 @Composable
 private fun BotaoIniciarTreino(aoClicar: () -> Unit) {
     Surface(
-        modifier = Modifier.fillMaxWidth().padding(top = 14.dp).height(74.dp).clickable(onClick = aoClicar),
+        modifier = Modifier.fillMaxWidth().padding(top = 14.dp).height(86.dp).clickable(onClick = aoClicar),
         color = branco,
         shape = RoundedCornerShape(12.dp),
         shadowElevation = 1.dp,
         border = androidx.compose.foundation.BorderStroke(1.dp, borda)
     ) {
-        Row(Modifier.fillMaxWidth().padding(horizontal = 15.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Box(
                 Modifier
-                    .size(44.dp)
+                    .size(48.dp)
                     .clip(CircleShape)
                     .background(verdeEscuro)
                     .padding(9.dp)
             ) {
                 Image(painterResource(R.drawable.treino), "Treinos personalizados", Modifier.fillMaxSize())
             }
-            Column(Modifier.padding(start = 12.dp).weight(1f)) {
-                Text("Iniciar treino", color = textoPrimario, fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                Text("Abra seu treino personalizado de hoje", color = textoSecundario, fontSize = 11.sp)
+            Column(
+                modifier = Modifier.padding(start = 14.dp).weight(1f),
+                verticalArrangement = Arrangement.spacedBy(3.dp)
+            ) {
+                Text("Iniciar treino", color = textoPrimario, style = TipografiaAplicativo.titleSmall)
+                Text("Abra seu treino personalizado de hoje", color = textoSecundario, style = TipografiaAplicativo.bodySmall)
             }
             Text("›", color = verdePrincipal, fontSize = 27.sp)
         }
@@ -252,30 +253,11 @@ private fun BotaoIniciarTreino(aoClicar: () -> Unit) {
 
 @Composable
 private fun DicaAdaExercicios() {
-    Surface(
-        modifier = Modifier.fillMaxWidth().padding(top = 14.dp),
-        color = fundoSecundario,
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Image(
-                painter = painterResource(R.drawable.onca_joia),
-                contentDescription = "Dica da Ada AI",
-                contentScale = ContentScale.Fit,
-                modifier = Modifier.size(58.dp)
-            )
-            Column(Modifier.padding(start = 10.dp).weight(1f)) {
-                Text("Dica da Ada AI", color = verdePrincipal, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                Text(
-                    "Continue se exercitando, o exercício físico é vital para uma vida saudável.",
-                    color = textoSecundario,
-                    fontSize = 12.sp,
-                    lineHeight = 16.sp,
-                    modifier = Modifier.padding(top = 3.dp)
-                )
-            }
-        }
-    }
+    BalaoDicaAda(
+        titulo = "Dica da Ada AI",
+        texto = "Continue se exercitando, o exercício físico é vital para uma vida saudável.",
+        modifier = Modifier.padding(top = 14.dp)
+    )
 }
 
 // função para transforma 10000 em 10.000 para facilicar a visualização

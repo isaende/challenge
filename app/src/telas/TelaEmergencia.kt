@@ -126,8 +126,7 @@ private fun CabecalhoEmergencia(aoVoltarInicio: () -> Unit) {
         Text(
             "Emergência",
             color = verdeEscuro,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
+            style = TipografiaAplicativo.titleLarge,
             textAlign = TextAlign.Center,
             modifier = Modifier.weight(1f)
         )
@@ -140,7 +139,7 @@ private fun CartaoSosEmergencia() {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .height(124.dp)
+            .height(142.dp)
             .shadow(3.dp, RoundedCornerShape(18.dp)),
         color = vermelhoPrincipal,
         shape = RoundedCornerShape(18.dp)
@@ -152,19 +151,18 @@ private fun CartaoSosEmergencia() {
                         listOf(vermelhoPrincipal, vermelhoEscuro)
                     )
                 )
-                .padding(18.dp)
+                .padding(20.dp)
         ) {
             Column(
                 modifier = Modifier
                     .align(Alignment.CenterStart)
                     .padding(end = 100.dp)
             ) {
-                Text("Precisa de ajuda?", color = branco, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Text("Precisa de ajuda?", color = branco, style = TipografiaAplicativo.titleMedium)
                 Text(
-                    "Acesso rapido a emergencias e SOS.",
+                    "Acesso rápido em caso de emergências.",
                     color = branco,
-                    fontSize = 13.sp,
-                    lineHeight = 18.sp,
+                    style = TipografiaAplicativo.bodyMedium,
                     modifier = Modifier.padding(top = 10.dp)
                 )
             }
@@ -190,8 +188,7 @@ private fun NumerosEmergencia() {
         Text(
             "Ligar para emergencia",
             color = textoPrimario,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Bold,
+            style = TipografiaAplicativo.titleSmall,
             modifier = Modifier.padding(start = 6.dp, bottom = 12.dp)
         )
         Row(
@@ -235,14 +232,13 @@ private fun CartaoNumeroEmergencia(
         Text(
             titulo,
             color = textoPrimario,
-            fontWeight = FontWeight.Bold,
-            fontSize = 12.sp,
+            style = TipografiaAplicativo.labelMedium,
             textAlign = TextAlign.Center,
             maxLines = 1,
             overflow = TextOverflow.Clip,
             modifier = Modifier.padding(top = 8.dp)
         )
-        Text(numero, color = vermelhoPrincipal, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+        Text(numero, color = vermelhoPrincipal, style = TipografiaAplicativo.titleSmall)
     }
 }
 
@@ -258,7 +254,7 @@ private fun BotaoLinkEmergencia(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .height(74.dp)
+            .height(94.dp)
             .clickable(onClick = aoClicar),
         color = branco,
         shape = RoundedCornerShape(16.dp),
@@ -266,7 +262,7 @@ private fun BotaoLinkEmergencia(
         shadowElevation = 1.dp
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 14.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Surface(
@@ -284,9 +280,12 @@ private fun BotaoLinkEmergencia(
                 }
             }
             Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Text(titulo, color = textoPrimario, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                Text(subtitulo, color = textoSecundario, fontSize = 11.sp, lineHeight = 14.sp)
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(titulo, color = textoPrimario, style = TipografiaAplicativo.titleSmall)
+                Text(subtitulo, color = textoSecundario, style = TipografiaAplicativo.bodySmall)
             }
             Text(">", color = verdePrincipal, fontSize = 22.sp, fontWeight = FontWeight.Bold)
         }
@@ -299,12 +298,12 @@ private fun CartaoAvisoSeguranca() {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .height(72.dp),
+            .height(88.dp),
         color = vermelhoClaro,
         shape = RoundedCornerShape(16.dp)
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 14.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Surface(
@@ -317,9 +316,12 @@ private fun CartaoAvisoSeguranca() {
                 }
             }
             Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Text("Sua segurança e nossa prioridade.", color = textoPrimario, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                Text("Estamos aqui para te ajudar.", color = textoSecundario, fontSize = 11.sp)
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(3.dp)
+            ) {
+                Text("Sua segurança é nossa prioridade.", color = textoPrimario, style = TipografiaAplicativo.titleSmall)
+                Text("Estamos aqui para te ajudar.", color = textoSecundario, style = TipografiaAplicativo.bodySmall)
             }
         }
     }
