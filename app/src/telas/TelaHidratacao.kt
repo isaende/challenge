@@ -38,6 +38,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -58,19 +59,18 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.delay
-
-private const val MetaDiariaMl = 2500
+import kotlinx.coroutines.launch
 
 private data class RegistroAgua(val horario: String, val quantidadeMl: Int)
 
 @Composable
-fun TelaHidratacao(aoVoltar: () -> Unit, modifier: Modifier = Modifier) {
-    val contexto = LocalContext.current
-    var registros by remember { mutableStateOf(carregarRegistros(contexto)) }
+fun TelaHidratacao(aoVoltar: () -> Unit, perfilId: Long, metaDiariaMl: Int, modifier: Modifier = Modifier) {
+    val escopo = rememberCoroutineScope()
+    var registros by remember { mutableStateOf(emptyList<RegistroAgua>()) }
     var dataDosRegistros by remember { mutableStateOf(LocalDate.now()) }
     var mostrarValorManual by remember { mutableStateOf(false) }
     val totalMl = registros.sumOf { it.quantidadeMl }
-    val progresso = (totalMl.toFloat() / MetaDiariaMl).coerceIn(0f, 1f)
+    val progresso = (totalMl.toFloat() / metaDiariaMl.coerceAtLeast(1)).coerceIn(0f, 1f)
 
     fun adicionarAgua(quantidadeMl: Int) {
         if (quantidadeMl <= 0) return
@@ -79,19 +79,26 @@ fun TelaHidratacao(aoVoltar: () -> Unit, modifier: Modifier = Modifier) {
             LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")),
             quantidadeMl
         )
-        registros = if (dataDosRegistros == hoje) registros + novoRegistro else listOf(novoRegistro)
-        dataDosRegistros = hoje
-        salvarRegistros(contexto, registros)
+        escopo.launch {
+            runCatching { ApiAda.adicionarAgua(perfilId, quantidadeMl) }.onSuccess {
+                registros = if (dataDosRegistros == hoje) registros + novoRegistro else listOf(novoRegistro)
+                dataDosRegistros = hoje
+            }
+        }
     }
 
     LaunchedEffect(Unit) {
+        runCatching { ApiAda.listarAgua(perfilId) }.onSuccess { resposta ->
+            registros = resposta.registros.map { item ->
+                RegistroAgua(item.consumidoEm?.substringAfter('T')?.take(5) ?: "--:--", item.quantidadeMl)
+            }
+        }
         while (true) {
             delay(30_000)
             val hoje = LocalDate.now()
             if (dataDosRegistros != hoje) {
                 registros = emptyList()
                 dataDosRegistros = hoje
-                salvarRegistros(contexto, emptyList())
             }
         }
     }
@@ -116,7 +123,7 @@ fun TelaHidratacao(aoVoltar: () -> Unit, modifier: Modifier = Modifier) {
         ) {
             CabecalhoHidratacao(aoVoltar)
             CartaoDestaqueHidratacao()
-            IndicadorHidratacao(totalMl, progresso)
+            IndicadorHidratacao(totalMl, metaDiariaMl, progresso)
             BotoesQuantidade(
                 aoAdicionar = ::adicionarAgua,
                 aoDigitarOutro = { mostrarValorManual = true }
@@ -174,7 +181,7 @@ private fun CartaoDestaqueHidratacao() {
 }
 
 @Composable
-private fun IndicadorHidratacao(totalMl: Int, progresso: Float) {
+private fun IndicadorHidratacao(totalMl: Int, metaDiariaMl: Int, progresso: Float) {
     Box(modifier = Modifier.fillMaxWidth().height(180.dp), contentAlignment = Alignment.Center) {
         Canvas(Modifier.size(146.dp)) {
             val largura = 8.dp.toPx()
@@ -192,7 +199,7 @@ private fun IndicadorHidratacao(totalMl: Int, progresso: Float) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(3.dp)) {
             Image(painterResource(R.drawable.agua), "Gota de água", Modifier.size(32.dp))
             Text(formatarLitros(totalMl), color = textoPrimario, fontWeight = FontWeight.Bold, fontSize = 25.sp)
-            Text("de 2,5 L", color = textoSecundario, style = TipografiaAplicativo.bodySmall)
+            Text("de ${formatarLitros(metaDiariaMl)}", color = textoSecundario, style = TipografiaAplicativo.bodySmall)
             Text("${(progresso * 100).toInt()}%", color = verdePrincipal, style = TipografiaAplicativo.labelLarge)
         }
     }
@@ -298,25 +305,3 @@ private fun DialogoValorManual(aoFechar: () -> Unit, aoAdicionar: (Int) -> Unit)
 
 private fun formatarLitros(ml: Int): String = String.format(java.util.Locale.forLanguageTag("pt-BR"), "%.2f L", ml / 1000.0).replace(",00", "")
 private fun formatarQuantidade(ml: Int): String = if (ml >= 1000 && ml % 1000 == 0) "${ml / 1000} L" else "$ml ml"
-
-private fun carregarRegistros(contexto: Context): List<RegistroAgua> {
-    val preferencias = contexto.getSharedPreferences("hidratacao", Context.MODE_PRIVATE)
-    val hoje = LocalDate.now().toString()
-    if (preferencias.getString("data", "") != hoje) {
-        preferencias.edit().clear().putString("data", hoje).apply()
-        return emptyList()
-    }
-    return preferencias.getString("registros", "").orEmpty()
-        .split(";")
-        .mapNotNull { item ->
-            val partes = item.split(",")
-            if (partes.size == 2) partes[1].toIntOrNull()?.let { RegistroAgua(partes[0], it) } else null
-        }
-}
-
-private fun salvarRegistros(contexto: Context, registros: List<RegistroAgua>) {
-    contexto.getSharedPreferences("hidratacao", Context.MODE_PRIVATE).edit()
-        .putString("data", LocalDate.now().toString())
-        .putString("registros", registros.joinToString(";") { "${it.horario},${it.quantidadeMl}" })
-        .apply()
-}

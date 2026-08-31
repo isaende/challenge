@@ -1,0 +1,62 @@
+package factory
+
+import java.sql.Connection
+import java.sql.DriverManager
+import java.util.Properties
+
+object ConnectionFactory {
+    private val propriedades: Properties by lazy {
+        Properties().apply {
+            ConnectionFactory::class.java.classLoader
+                .getResourceAsStream("database.properties")
+                ?.use(::load)
+        }
+    }
+
+    private fun configuracao(variavel: String, propriedade: String): String =
+        System.getenv(variavel)?.takeIf(String::isNotBlank)
+            ?: propriedades.getProperty(propriedade)?.takeIf(String::isNotBlank)
+            ?: error("Configure $variavel ou $propriedade em database.properties")
+
+    init {
+        DriverManager.setLoginTimeout(
+            System.getenv("DB_CONNECT_TIMEOUT_SECONDS")?.toIntOrNull()
+                ?: propriedades.getProperty("database.connectTimeoutSeconds")?.toIntOrNull()
+                ?: 10
+        )
+    }
+
+    fun getConnection(): Connection = DriverManager.getConnection(
+        configuracao("DB_URL", "database.url"),
+        configuracao("DB_USER", "database.user"),
+        configuracao("DB_PASSWORD", "database.password")
+    )
+
+    fun testarConexao() {
+        getConnection().use { conexao ->
+            conexao.prepareStatement("SELECT 1 FROM DUAL").use { comando ->
+                check(comando.executeQuery().use { it.next() }) { "Oracle nao respondeu ao teste" }
+            }
+        }
+    }
+
+    fun <T> transaction(bloco: (Connection) -> T): T = getConnection().use { conexao ->
+        conexao.autoCommit = false
+        try {
+            bloco(conexao).also { conexao.commit() }
+        } catch (erro: Throwable) {
+            conexao.rollback()
+            throw erro
+        }
+    }
+
+    fun proximoId(conexao: Connection, tabela: String, coluna: String = "id"): Long {
+        require(tabela.matches(Regex("ADA_[A-Z_]+")) && coluna.matches(Regex("[a-z_]+")))
+        conexao.prepareStatement("SELECT NVL(MAX($coluna), 0) + 1 FROM $tabela").use { comando ->
+            return comando.executeQuery().use { resultado ->
+                check(resultado.next())
+                resultado.getLong(1)
+            }
+        }
+    }
+}

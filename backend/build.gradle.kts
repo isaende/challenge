@@ -21,4 +21,10 @@ dependencies {
     implementation("io.ktor:ktor-client-content-negotiation-jvm:3.0.3")
     implementation("io.ktor:ktor-serialization-kotlinx-json-jvm:3.0.3")
     implementation("ch.qos.logback:logback-classic:1.5.12")
+    implementation("com.oracle.database.jdbc:ojdbc11:23.26.3.0.0")
+    testImplementation(kotlin("test"))
+}
+
+tasks.test {
+    useJUnitPlatform()
 }

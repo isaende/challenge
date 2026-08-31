@@ -48,9 +48,11 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -77,8 +79,8 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.coroutines.launch
 
-private val ConversorMedicamentos = Json { ignoreUnknownKeys = true }
 private val FormatoHoraMedicamento = DateTimeFormatter.ofPattern("HH:mm")
 private const val CANAL_LEMBRETES_MEDICAMENTOS = "lembretes_medicamentos"
 
@@ -92,61 +94,34 @@ private data class MedicamentoSalvo(
     val tomadoEm: String = ""
 )
 
-private class RepositorioMedicamentos(contexto: Context) {
-    private val preferencias = contexto.getSharedPreferences("medicamentos", Context.MODE_PRIVATE)
-
-    fun listar(): List<MedicamentoSalvo> {
-        val textoSalvo = preferencias.getString(CHAVE_LISTA, null)
-        if (textoSalvo.isNullOrBlank()) return emptyList()
-        val medicamentosSalvos = runCatching {
-            ConversorMedicamentos.decodeFromString(ListSerializer(MedicamentoSalvo.serializer()), textoSalvo)
-        }.getOrDefault(emptyList())
-        val medicamentosDoUsuario = medicamentosSalvos.filterNot { it.codigo in CODIGOS_DEMONSTRACAO }
-        if (medicamentosDoUsuario.size != medicamentosSalvos.size) {
-            salvarTodos(medicamentosDoUsuario)
-        }
-        return medicamentosDoUsuario
-    }
-
-    fun salvarTodos(medicamentos: List<MedicamentoSalvo>) {
-        preferencias.edit()
-            .putString(CHAVE_LISTA, ConversorMedicamentos.encodeToString(medicamentos))
-            .apply()
-    }
-
-    fun adicionar(medicamento: MedicamentoSalvo): List<MedicamentoSalvo> {
-        val atualizados = (listar() + medicamento).sortedBy { minutosDoDia(it.horario) }
-        salvarTodos(atualizados)
-        return atualizados
-    }
-
-    fun atualizar(medicamento: MedicamentoSalvo): List<MedicamentoSalvo> {
-        val atualizados = listar().map { atual ->
-            if (atual.codigo == medicamento.codigo) medicamento else atual
-        }.sortedBy { minutosDoDia(it.horario) }
-        salvarTodos(atualizados)
-        return atualizados
-    }
-
-    companion object {
-        private const val CHAVE_LISTA = "lista"
-        private val CODIGOS_DEMONSTRACAO = setOf("losartana", "metformina", "vitamina-d")
-    }
+private class RepositorioMedicamentos(private val perfilId: Long) {
+    suspend fun listar(): List<MedicamentoSalvo> = ApiAda.listarMedicamentos(perfilId).map(MedicamentoApi::paraTela)
+    suspend fun adicionar(nome:String,dosagem:String,horario:String,alarmeAtivo:Boolean): MedicamentoSalvo =
+        ApiAda.adicionarMedicamento(perfilId,MedicamentoNovoApi(nome,dosagem,horario,alarmeAtivo)).paraTela()
+    suspend fun marcarTomado(codigo:String) { ApiAda.marcarMedicamentoTomado(perfilId,codigo.toLong()) }
 }
+
+private fun MedicamentoApi.paraTela()=MedicamentoSalvo(id.toString(),nome,dosagem,horario,alarmeAtivo,tomadoEm.orEmpty())
 
 @Composable
 fun TelaMedicamentos(
     aoVoltarInicio: () -> Unit,
     aoAbrirExames: () -> Unit,
+    perfilId: Long,
     modificador: Modifier = Modifier
 ) {
     val contexto = LocalContext.current
-    val repositorio = remember { RepositorioMedicamentos(contexto) }
-    var medicamentos by remember { mutableStateOf(repositorio.listar()) }
+    val repositorio = remember(perfilId) { RepositorioMedicamentos(perfilId) }
+    val escopo = rememberCoroutineScope()
+    var medicamentos by remember { mutableStateOf(emptyList<MedicamentoSalvo>()) }
     var exibindoFormulario by remember { mutableStateOf(false) }
     val pedirPermissaoNotificacao = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) {}
+
+    LaunchedEffect(perfilId) {
+        medicamentos = runCatching { repositorio.listar() }.getOrDefault(emptyList())
+    }
 
     if (exibindoFormulario) {
         TelaAdicionarMedicamento(
@@ -155,16 +130,14 @@ fun TelaMedicamentos(
                 if (alarmeAtivo) {
                     pedirPermissaoNotificacaoMedicamento(contexto, pedirPermissaoNotificacao::launch)
                 }
-                val novoMedicamento = MedicamentoSalvo(
-                    codigo = UUID.randomUUID().toString(),
-                    nome = nome.ifBlank { "Medicamento" },
-                    dosagem = dosagem.ifBlank { "Dosagem nao informada" },
-                    horario = horario.ifBlank { "08:00" },
-                    alarmeAtivo = alarmeAtivo
-                )
-                medicamentos = repositorio.adicionar(novoMedicamento)
-                if (alarmeAtivo) agendarLembreteMedicamento(contexto, novoMedicamento)
-                exibindoFormulario = false
+                escopo.launch {
+                    runCatching { repositorio.adicionar(nome.ifBlank { "Medicamento" },dosagem.ifBlank { "Dosagem nao informada" },horario.ifBlank { "08:00" },alarmeAtivo) }
+                        .onSuccess { novoMedicamento ->
+                            medicamentos = (medicamentos + novoMedicamento).sortedBy { minutosDoDia(it.horario) }
+                            if (alarmeAtivo) agendarLembreteMedicamento(contexto, novoMedicamento)
+                            exibindoFormulario = false
+                        }
+                }
             }
         )
         return
@@ -200,8 +173,11 @@ fun TelaMedicamentos(
                     medicamento = proximoMedicamento,
                     aoMarcarTomado = {
                         val medicamento = proximoMedicamento ?: return@CartaoProximaDose
-                        val atualizado = medicamento.copy(tomadoEm = LocalDate.now().toString())
-                        medicamentos = repositorio.atualizar(atualizado)
+                        escopo.launch {
+                            runCatching { repositorio.marcarTomado(medicamento.codigo) }.onSuccess {
+                                medicamentos = medicamentos.map { if(it.codigo==medicamento.codigo)it.copy(tomadoEm=LocalDate.now().toString()) else it }
+                            }
+                        }
                     }
                 )
                 Spacer(Modifier.height(12.dp))
@@ -426,7 +402,7 @@ private fun LinhaMedicamento(medicamento: MedicamentoSalvo) {
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f)
                 )
-                if (medicamento.tomadoEm == LocalDate.now().toString()) {
+                if (medicamento.tomadoEm.startsWith(LocalDate.now().toString())) {
                     Text("Tomado", color = verdePrincipal, style = TipografiaAplicativo.labelSmall)
                 }
             }

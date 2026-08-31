@@ -45,8 +45,6 @@ import java.text.NumberFormat
 import java.util.Locale
 
 // meta de passos fixa, futuramente ajustar de acordo com a idade do usuario
-private const val MetaPassos = 10_000L
-
 @Composable
 fun TelaExercicios(
     passosHoje: Long,
@@ -54,12 +52,13 @@ fun TelaExercicios(
     aoAtualizar: () -> Unit,
     aoIniciarTreino: () -> Unit,
     aoVoltar: () -> Unit,
+    metaPassos: Long = 8_000L,
     modifier: Modifier = Modifier
 ) {
 
     //calcula o progresso dividindo os passos de hoje pela meta e os passos restantes subtraindo os passos de voce pela meta, o 
-    val progresso = (passosHoje.toFloat() / MetaPassos).coerceIn(0f, 1f)
-    val passosRestantes = (MetaPassos - passosHoje).coerceAtLeast(0)
+    val progresso = (passosHoje.toFloat() / metaPassos.coerceAtLeast(1)).coerceIn(0f, 1f)
+    val passosRestantes = (metaPassos - passosHoje).coerceAtLeast(0)
 
 // atualiza o health connect ao abrir a tela
     LaunchedEffect(Unit) { aoAtualizar() }
@@ -95,7 +94,7 @@ fun TelaExercicios(
                 textAlign = TextAlign.Center
             )
             SeletorHoje()
-            IndicadorPassos(passosHoje, progresso, carregando, Modifier.height(285.dp))
+            IndicadorPassos(passosHoje, metaPassos, progresso, carregando, Modifier.height(285.dp))
             ResumoPassos(passosRestantes, progresso)
             BotaoIniciarTreino(aoIniciarTreino)
             DicaAdaExercicios()
@@ -152,7 +151,7 @@ private fun SeletorHoje() {
 
 // indicador de passos com gráfico circular que acompanha a quantidade
 @Composable
-private fun IndicadorPassos(passos: Long, progresso: Float, carregando: Boolean, modifier: Modifier = Modifier) {
+private fun IndicadorPassos(passos: Long, metaPassos: Long, progresso: Float, carregando: Boolean, modifier: Modifier = Modifier) {
     Box(modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
         Canvas(Modifier.size(184.dp)) {
             val largura = 11.dp.toPx()
@@ -188,7 +187,7 @@ private fun IndicadorPassos(passos: Long, progresso: Float, carregando: Boolean,
                 fontSize = 30.sp
             )
             Text("passos", color = textoPrimario, style = TipografiaAplicativo.bodyMedium)
-            Text("Meta: ${formatarNumero(MetaPassos)}", color = textoSecundario, style = TipografiaAplicativo.bodySmall)
+            Text("Meta: ${formatarNumero(metaPassos)}", color = textoSecundario, style = TipografiaAplicativo.bodySmall)
             Text("${(progresso * 100).toInt()}%", color = verdePrincipal, style = TipografiaAplicativo.titleMedium)
         }
     }

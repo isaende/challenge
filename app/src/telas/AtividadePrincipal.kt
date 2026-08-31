@@ -26,6 +26,8 @@ import kotlinx.coroutines.launch
 // mapa das telas do aplicativo que decide a tela atual
 
 private enum class TelaAtual {
+    LOGIN,
+    CADASTRO,
     INICIO,
     TELEMEDICINA,
     CHAT_MEDICO,
@@ -44,7 +46,9 @@ class AtividadePrincipal : ComponentActivity() {
        
        // criação das interfaces visual pelo Jetpack compose
         setContent {
-            var telaAtual by remember { mutableStateOf(TelaAtual.INICIO) }
+            val repositorioSessao = remember { RepositorioSessao(this@AtividadePrincipal) }
+            var sessao by remember { mutableStateOf(repositorioSessao.carregar()) }
+            var telaAtual by remember { mutableStateOf(if (sessao == null) TelaAtual.LOGIN else TelaAtual.INICIO) }
             var dadosSaude by remember { mutableStateOf(DadosSaude()) }
             var statusSaude by remember { mutableStateOf("Verificando Health Connect...") }
             var mostrarBotaoConectarSaude by remember { mutableStateOf(false) }
@@ -81,6 +85,9 @@ class AtividadePrincipal : ComponentActivity() {
                     mostrarBotaoConectarSaude = false
                     try {
                         dadosSaude = repositorioSaude.lerDadosRecentes()
+                        sessao?.let { usuario ->
+                            runCatching { ApiAda.salvarResumo(usuario.perfilId, dadosSaude) }
+                        }
                         statusSaude = "Atualizado agora pelo Health Connect"
                         mostrarBotaoConectarSaude = true
                         textoBotaoSaude = "Atualizar"
@@ -138,6 +145,24 @@ class AtividadePrincipal : ComponentActivity() {
             ) {
                 MaterialTheme(typography = TipografiaAplicativo) {
                     when (telaAtual) {
+                    TelaAtual.LOGIN -> TelaLogin(
+                        aoEntrar = { novaSessao ->
+                            repositorioSessao.salvar(novaSessao)
+                            sessao = novaSessao
+                            telaAtual = TelaAtual.INICIO
+                        },
+                        aoCriarConta = { telaAtual = TelaAtual.CADASTRO }
+                    )
+
+                    TelaAtual.CADASTRO -> TelaCadastro(
+                        aoCadastrar = { novaSessao ->
+                            repositorioSessao.salvar(novaSessao)
+                            sessao = novaSessao
+                            telaAtual = TelaAtual.INICIO
+                        },
+                        aoFazerLogin = { telaAtual = TelaAtual.LOGIN }
+                    )
+
                     TelaAtual.INICIO -> TelaInicio(
                         aoAbrirChatMedico = { telaAtual = TelaAtual.CHAT_MEDICO },
                         aoAbrirTelemedicina = { telaAtual = TelaAtual.TELEMEDICINA },
@@ -150,11 +175,13 @@ class AtividadePrincipal : ComponentActivity() {
                         statusSaude = statusSaude,
                         aoConectarSaude = { conectarHealthConnect() },
                         mostrarBotaoConectarSaude = mostrarBotaoConectarSaude,
-                        textoBotaoSaude = textoBotaoSaude
+                        textoBotaoSaude = textoBotaoSaude,
+                        nomeUsuario = sessao?.nomeCompleto.orEmpty()
                     )
 
                     TelaAtual.CHAT_MEDICO -> TelaChatMedico(
                         repositorio = repositorio,
+                        perfilId = sessao?.perfilId ?: 0,
                         aoVoltar = { telaAtual = TelaAtual.INICIO }
                     )
 
@@ -169,12 +196,14 @@ class AtividadePrincipal : ComponentActivity() {
                     )
 
                     TelaAtual.EXAMES -> TelaExames(
-                        aoVoltarInicio = { telaAtual = TelaAtual.INICIO }
+                        aoVoltarInicio = { telaAtual = TelaAtual.INICIO },
+                        perfilId = sessao?.perfilId ?: 0
                     )
 
                     TelaAtual.MEDICAMENTOS -> TelaMedicamentos(
                         aoVoltarInicio = { telaAtual = TelaAtual.INICIO },
-                        aoAbrirExames = { telaAtual = TelaAtual.EXAMES }
+                        aoAbrirExames = { telaAtual = TelaAtual.EXAMES },
+                        perfilId = sessao?.perfilId ?: 0
                     )
 
                     TelaAtual.EMERGENCIA -> TelaEmergencia(
@@ -183,7 +212,9 @@ class AtividadePrincipal : ComponentActivity() {
                     )
 
                         TelaAtual.HIDRATACAO -> TelaHidratacao(
-                            aoVoltar = { telaAtual = TelaAtual.INICIO }
+                            aoVoltar = { telaAtual = TelaAtual.INICIO },
+                            perfilId = sessao?.perfilId ?: 0,
+                            metaDiariaMl = sessao?.metaAguaMl ?: 2500
                         )
 
                         TelaAtual.EXERCICIOS -> TelaExercicios(
@@ -191,7 +222,8 @@ class AtividadePrincipal : ComponentActivity() {
                             carregando = dadosSaude.passos == null,
                             aoAtualizar = { atualizarDadosSaude() },
                             aoIniciarTreino = { telaAtual = TelaAtual.TREINO },
-                            aoVoltar = { telaAtual = TelaAtual.INICIO }
+                            aoVoltar = { telaAtual = TelaAtual.INICIO },
+                            metaPassos = sessao?.metaPassos ?: 8000
                         )
 
                         TelaAtual.TREINO -> TelaTreino(

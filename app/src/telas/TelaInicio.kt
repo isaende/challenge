@@ -73,6 +73,7 @@ fun TelaInicio(
     aoConectarSaude: () -> Unit = {},
     mostrarBotaoConectarSaude: Boolean = true,
     textoBotaoSaude: String = "Conectar",
+    nomeUsuario: String = "",
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -92,7 +93,7 @@ fun TelaInicio(
                 .padding(espacoTela)
                 .verticalScroll(rememberScrollState())
         ) {
-            CabecalhoInicio()
+            CabecalhoInicio(nomeUsuario)
             CorpoInicio(
                 aoAbrirChatMedico = aoAbrirChatMedico,
                 aoAbrirTelemedicina = aoAbrirTelemedicina,
@@ -112,7 +113,7 @@ fun TelaInicio(
 }
 
 @Composable
-private fun CabecalhoInicio() {
+private fun CabecalhoInicio(nomeUsuario: String) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -135,7 +136,7 @@ private fun CabecalhoInicio() {
                 style = TipografiaAplicativo.bodyLarge
             )
             Text(
-                text = "Maria!",
+                text = "${nomeUsuario.substringBefore(' ').ifBlank { "Usuário" }}!",
                 color = branco,
                 style = TipografiaAplicativo.titleLarge
             )

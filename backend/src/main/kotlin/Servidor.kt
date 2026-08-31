@@ -1,3 +1,6 @@
+import api.rotasBanco
+import factory.ConnectionFactory
+
 // passa para analisar se a IA pode responder a pergunta, 
 // primeiro classifica se é caso de urgencia, se ele deve recusar ou der algum erro
 
@@ -37,6 +40,9 @@ private const val RESPOSTA_RECUSA = "Não posso diagnosticar, prescrever medicam
 private const val RESPOSTA_ERRO = "Não foi possível responder agora. Tente novamente."
 
 fun main() {
+    runCatching { ConnectionFactory.testarConexao() }
+        .onSuccess { println("Conexao com o Oracle realizada com sucesso.") }
+        .onFailure { println("Aviso: Oracle indisponivel no inicio: ${it.message}") }
     embeddedServer(Netty, host = "0.0.0.0", port = System.getenv("PORT")?.toIntOrNull() ?: 8080) {
         modulo()
     }.start(wait = true)
@@ -53,6 +59,7 @@ fun Application.modulo() {
         }
     }
     routing {
+        rotasBanco()
         post("/api/chat-medico") {
             val pedido = runCatching { call.receive<PedidoChat>() }.getOrElse {
                 call.respond(HttpStatusCode.BadRequest, RespostaChat("Requisição inválida.", "erro"))

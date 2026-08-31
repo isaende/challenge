@@ -75,7 +75,7 @@ import home_page.borda
 import home_page.branco
 import home_page.ExameEnviado
 import home_page.fundoPrincipal
-import home_page.RepositorioExames
+import home_page.ApiAda
 import home_page.TipografiaAplicativo
 import home_page.textoPrimario
 import home_page.textoSecundario
@@ -372,11 +372,12 @@ private class FabricaModeloVisao(
 @Composable
 fun TelaChatMedico(
     repositorio: RepositorioChatMedico = criarRepositorioChatMedico(),
+    perfilId: Long = 0,
     aoVoltar: () -> Unit = {}
 ) {
     val contexto = LocalContext.current
     val escopo = rememberCoroutineScope()
-    val repositorioExames = remember { RepositorioExames(contexto) }
+    var examesSalvos by remember { mutableStateOf(emptyList<ExameEnviado>()) }
     var mostrarOpcoesAnexo by remember { mutableStateOf(false) }
     var mostrarExamesSalvos by remember { mutableStateOf(false) }
     val modelo: ModeloVisaoChatMedico = viewModel(factory = FabricaModeloVisao(repositorio))
@@ -424,14 +425,26 @@ fun TelaChatMedico(
             },
             aoEscolherSalvo = {
                 mostrarOpcoesAnexo = false
-                mostrarExamesSalvos = true
+                escopo.launch {
+                    examesSalvos = runCatching {
+                        ApiAda.listarExames(perfilId).map { exame ->
+                            ExameEnviado(
+                                codigo = exame.id.toString(), nome = exame.nomeExame,
+                                data = exame.dataExame, enderecoOriginal = "",
+                                tipoArquivo = exame.tipoMime, nomeArquivo = exame.nomeArquivo,
+                                caminhoCopia = ApiAda.baixarExame(contexto, perfilId, exame)
+                            )
+                        }
+                    }.getOrDefault(emptyList())
+                    mostrarExamesSalvos = true
+                }
             }
         )
     }
 
     if (mostrarExamesSalvos) {
         DialogoExamesSalvos(
-            exames = repositorioExames.listar().filter { it.tipoArquivo.startsWith("image/") },
+            exames = examesSalvos.filter { it.tipoArquivo.startsWith("image/") },
             aoFechar = { mostrarExamesSalvos = false },
             aoEscolher = { exame ->
                 mostrarExamesSalvos = false

@@ -43,9 +43,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -69,6 +71,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.coroutines.launch
 
 private val ConversorExames = Json { ignoreUnknownKeys = true }
 private val FormatoDataExame = DateTimeFormatter.ofPattern("dd/MM/yyyy")
@@ -86,40 +89,16 @@ data class ExameEnviado(
 )
 
 // usa uma memória simples do Android para salvar e ler a lista de exames, futuramente aplicar o branco de dados
-class RepositorioExames(
-    contexto: Context
-) {
-    private val preferencias = contexto.getSharedPreferences("exames_enviados", Context.MODE_PRIVATE)
-
-    fun listar(): List<ExameEnviado> {
-        val textoSalvo = preferencias.getString(CHAVE_LISTA_EXAMES, null) ?: return emptyList()
-        return runCatching {
-            ConversorExames.decodeFromString(ListSerializer(ExameEnviado.serializer()), textoSalvo)
-        }.getOrDefault(emptyList())
-    }
-
-    fun salvar(exame: ExameEnviado): List<ExameEnviado> {
-        val atualizados = (listOf(exame) + listar()).distinctBy { it.codigo }
-        preferencias.edit()
-            .putString(CHAVE_LISTA_EXAMES, ConversorExames.encodeToString(atualizados))
-            .apply()
-        return atualizados
-    }
-
-    companion object {
-        private const val CHAVE_LISTA_EXAMES = "lista"
-    }
-}
-
 // função principal que controla o funcionamento da tela
 @Composable
 fun TelaExames(
     aoVoltarInicio: () -> Unit,
+    perfilId: Long,
     modificador: Modifier = Modifier
 ) {
     val contexto = LocalContext.current
-    val repositorio = remember { RepositorioExames(contexto) }
-    var exames by remember { mutableStateOf(repositorio.listar()) }
+    val escopo = rememberCoroutineScope()
+    var exames by remember { mutableStateOf(emptyList<ExameEnviado>()) }
     var exameSelecionado by remember { mutableStateOf<ExameEnviado?>(null) }
     var arquivoEscolhido by remember { mutableStateOf<Uri?>(null) }
     var tipoArquivoEscolhido by remember { mutableStateOf("") }
@@ -127,6 +106,11 @@ fun TelaExames(
     var nomeDigitado by remember { mutableStateOf("") }
     var dataDigitada by remember { mutableStateOf(LocalDate.now().format(FormatoDataExame)) }
     var mostrarOpcoesEnvio by remember { mutableStateOf(false) }
+
+    LaunchedEffect(perfilId) {
+        exames = runCatching { ApiAda.listarExames(perfilId).map { exame -> exame.paraTela().copy(caminhoCopia=runCatching { ApiAda.baixarExame(contexto,perfilId,exame) }.getOrDefault("")) } }
+            .getOrDefault(emptyList())
+    }
 
     fun prepararArquivo(enderecoArquivo: Uri, manterPermissao: Boolean) {
         if (manterPermissao) {
@@ -276,16 +260,11 @@ fun TelaExames(
                     codigo = codigo,
                     nomeArquivo = nomeArquivoEscolhido
                 )
-                val exame = ExameEnviado(
-                    codigo = codigo,
-                    nome = nomeDigitado.ifBlank { "Exame sem nome" },
-                    data = dataDigitada.ifBlank { LocalDate.now().format(FormatoDataExame) },
-                    enderecoOriginal = enderecoArquivo.toString(),
-                    tipoArquivo = tipoArquivoEscolhido.ifBlank { "application/octet-stream" },
-                    nomeArquivo = nomeArquivoEscolhido.ifBlank { "arquivo" },
-                    caminhoCopia = caminhoCopia
-                )
-                exames = repositorio.salvar(exame)
+                escopo.launch {
+                    val dataIso=runCatching { LocalDate.parse(dataDigitada,FormatoDataExame).toString() }.getOrDefault(LocalDate.now().toString())
+                    runCatching { ApiAda.enviarExame(contexto,perfilId,nomeDigitado.ifBlank { "Exame sem nome" },dataIso,tipoArquivoEscolhido.ifBlank { "application/octet-stream" },nomeArquivoEscolhido.ifBlank { "arquivo" },enderecoArquivo) }
+                        .onSuccess { salvo -> exames=listOf(salvo.paraTela().copy(enderecoOriginal=enderecoArquivo.toString(),caminhoCopia=caminhoCopia))+exames }
+                }
                 arquivoEscolhido = null
             }
         )
@@ -365,6 +344,15 @@ private fun CartaoAvisoExames() {
         texto = "Ada ajuda você a ter acesso rápido aos seus exames para monitorar a saúde."
     )
 }
+
+internal fun ExameApi.paraTela()=ExameEnviado(
+    codigo=id.toString(),
+    nome=nomeExame,
+    data=runCatching { LocalDate.parse(dataExame).format(FormatoDataExame) }.getOrDefault(dataExame),
+    enderecoOriginal="",
+    tipoArquivo=tipoMime,
+    nomeArquivo=nomeArquivo
+)
 
 // lista com todos exames enviados
 @Composable

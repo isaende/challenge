@@ -16,6 +16,13 @@ val sincronizarImagensDrawable by tasks.registering(Sync::class) {
         }
         includeEmptyDirs = false
     }
+    from("src/images/cadastro") {
+        include("*.png")
+        eachFile {
+            path = name.lowercase().replace("-", "_")
+        }
+        includeEmptyDirs = false
+    }
     into(imagensDrawableGeradas.resolve("drawable"))
 }
 
