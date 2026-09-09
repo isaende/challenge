@@ -7,12 +7,11 @@ import model.AdaPerfil
 class AdaPerfilDAO {
     fun inserir(perfil: AdaPerfil, conexao: Connection? = null): AdaPerfil {
         val executar: (Connection) -> AdaPerfil = { con ->
-            val id = if (perfil.id > 0) perfil.id else ConnectionFactory.proximoId(con, "ADA_PERFIL")
-            con.prepareStatement("""INSERT INTO ADA_PERFIL
-                (id, nm_completo, dt_nascimento, genero, objetivoPrincipal, criadoEm, ADA_USUARIOS_cod_usuario)
-                VALUES (?, ?, ?, ?, ?, SYSTIMESTAMP, ?)""").use { ps ->
-                ps.setLong(1, id); ps.setString(2, perfil.nomeCompleto); ps.setDate(3, java.sql.Date.valueOf(perfil.dataNascimento))
-                ps.setString(4, perfil.genero); ps.setString(5, perfil.objetivoPrincipal); ps.setLong(6, perfil.usuarioId); ps.executeUpdate()
+            val id = ConnectionFactory.inserirRetornandoId(con, """INSERT INTO ADA_PERFIL
+                (nm_completo, dt_nascimento, genero, objetivoPrincipal, criadoEm, ADA_USUARIOS_cod_usuario)
+                VALUES (?, ?, ?, ?, SYSTIMESTAMP, ?)""") { ps ->
+                ps.setString(1, perfil.nomeCompleto); ps.setDate(2, java.sql.Date.valueOf(perfil.dataNascimento))
+                ps.setString(3, perfil.genero); ps.setString(4, perfil.objetivoPrincipal); ps.setLong(5, perfil.usuarioId)
             }; perfil.copy(id = id)
         }
         return conexao?.let(executar) ?: ConnectionFactory.transaction(executar)

@@ -135,8 +135,7 @@ private fun CartaoDuvidasComAda(aoAbrirChatAda: () -> Unit) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(18.dp)
-                    .padding(end = 126.dp),
+                    .padding(18.dp),
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 Surface(
@@ -177,15 +176,6 @@ private fun CartaoDuvidasComAda(aoAbrirChatAda: () -> Unit) {
                     )
                 }
             }
-            Image(
-                painter = painterResource(R.drawable.onca_duvida),
-                contentDescription = "Ada, assistente de saúde",
-                contentScale = ContentScale.Fit,
-                modifier = Modifier
-                    .size(120.dp)
-                    .align(Alignment.CenterEnd)
-                    .padding(end = 12.dp)
-            )
         }
     }
 }

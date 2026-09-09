@@ -288,8 +288,7 @@ private fun CartaoProximaDose(
             Column(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .fillMaxWidth()
-                    .padding(end = 108.dp),
+                    .fillMaxWidth(),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
             Text(
@@ -351,14 +350,6 @@ private fun CartaoProximaDose(
                 Text("Marcar como tomado", color = branco, style = TipografiaAplicativo.labelLarge)
             }
             }
-            Image(
-                painter = painterResource(R.drawable.onca_comprimido),
-                contentDescription = "Ada com medicamento",
-                contentScale = ContentScale.Fit,
-                modifier = Modifier
-                    .size(108.dp)
-                    .align(Alignment.CenterEnd)
-            )
         }
     }
 }
@@ -457,8 +448,7 @@ private fun DivisorMedicamentos() {
 private fun CartaoDicaMedicamentos() {
     BalaoDicaAda(
         titulo = "Dica da Ada para Dona Maria",
-        texto = "Tome seus medicamentos sempre nos horários certos e cuide da sua saúde!",
-        imagem = R.drawable.onca_comprimido
+        texto = "Tome seus medicamentos sempre nos horários certos e cuide da sua saúde!"
     )
 }
 

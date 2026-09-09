@@ -1,28 +1,21 @@
 package home_page
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.ada.chatmedico.demo.R
 
 val TipografiaAplicativo = Typography(
     titleLarge = TextStyle(fontSize = 18.sp, lineHeight = 24.sp, fontWeight = FontWeight.Bold),
@@ -40,8 +33,7 @@ val TipografiaAplicativo = Typography(
 fun BalaoDicaAda(
     titulo: String,
     texto: String,
-    modifier: Modifier = Modifier,
-    imagem: Int = R.drawable.onca_joia
+    modifier: Modifier = Modifier
 ) {
     Surface(
         modifier = modifier
@@ -52,28 +44,16 @@ fun BalaoDicaAda(
         border = BorderStroke(1.dp, borda),
         shadowElevation = 1.dp
     ) {
-        Row(
+        Column(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            Image(
-                painter = painterResource(imagem),
-                contentDescription = "Dica da Ada",
-                contentScale = ContentScale.Fit,
-                modifier = Modifier.size(62.dp)
+            Text(titulo, color = verdePrincipal, style = TipografiaAplicativo.titleSmall)
+            Text(
+                texto,
+                color = textoSecundario,
+                style = TipografiaAplicativo.bodySmall
             )
-            androidx.compose.foundation.layout.Spacer(Modifier.width(14.dp))
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(4.dp)
-            ) {
-                Text(titulo, color = verdePrincipal, style = TipografiaAplicativo.titleSmall)
-                Text(
-                    texto,
-                    color = textoSecundario,
-                    style = TipografiaAplicativo.bodySmall
-                )
-            }
         }
     }
 }

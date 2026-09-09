@@ -7,14 +7,13 @@ import model.AdaUsuarios
 class AdaUsuariosDAO {
     fun inserir(usuario: AdaUsuarios, conexao: Connection? = null): AdaUsuarios {
         val executar: (Connection) -> AdaUsuarios = { con ->
-            val id = if (usuario.codUsuario > 0) usuario.codUsuario else ConnectionFactory.proximoId(con, "ADA_USUARIOS", "cod_usuario")
-            con.prepareStatement("""
+            val id = ConnectionFactory.inserirRetornandoId(con, """
                 INSERT INTO ADA_USUARIOS
-                (cod_usuario, email, senhaHash, papel, status, emailVerificadoEm, ultimoLoginEm, criadoEm)
-                VALUES (?, ?, ?, ?, ?, NULL, NULL, SYSTIMESTAMP)
-            """.trimIndent()).use { ps ->
-                ps.setLong(1, id); ps.setString(2, usuario.email.lowercase()); ps.setString(3, usuario.senhaHash)
-                ps.setString(4, usuario.papel); ps.setString(5, usuario.status); ps.executeUpdate()
+                (email, senhaHash, papel, status, emailVerificadoEm, ultimoLoginEm, criadoEm)
+                VALUES (?, ?, ?, ?, NULL, NULL, SYSTIMESTAMP)
+            """.trimIndent(), "COD_USUARIO") { ps ->
+                ps.setString(1, usuario.email.lowercase()); ps.setString(2, usuario.senhaHash)
+                ps.setString(3, usuario.papel); ps.setString(4, usuario.status)
             }
             usuario.copy(codUsuario = id)
         }

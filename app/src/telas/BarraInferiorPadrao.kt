@@ -10,10 +10,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FloatingActionButton
@@ -27,7 +27,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ada.chatmedico.demo.R
@@ -69,46 +68,55 @@ fun BarraInferiorPadrao(
             .fillMaxWidth()
             .navigationBarsPadding(),
         color = branco,
+        shape = RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp),
         shadowElevation = 6.dp
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(62.dp)
-                .padding(horizontal = 6.dp),
-            horizontalArrangement = Arrangement.SpaceAround,
+                .heightIn(min = 72.dp)
+                .padding(top = 4.dp, bottom = 12.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            BotaoBarraInferior(itensMenu[0])
-            BotaoBarraInferior(itensMenu[1])
-            FloatingActionButton(
-                onClick = aoAdicionar,
-                containerColor = verdePrincipal,
-                contentColor = branco,
-                modifier = Modifier.size(48.dp)
+            BotaoBarraInferior(itensMenu[0], Modifier.weight(1f))
+            BotaoBarraInferior(itensMenu[1], Modifier.weight(1f))
+            Box(
+                modifier = Modifier.weight(1f),
+                contentAlignment = Alignment.Center
             ) {
-                Text("+", fontSize = 26.sp, fontWeight = FontWeight.Light)
+                FloatingActionButton(
+                    onClick = aoAdicionar,
+                    containerColor = verdePrincipal,
+                    contentColor = branco,
+                    shape = CircleShape,
+                    modifier = Modifier.size(44.dp)
+                ) {
+                    Text("+", fontSize = 30.sp, lineHeight = 32.sp, fontWeight = FontWeight.Light)
+                }
             }
-            BotaoBarraInferior(itensMenu[2])
-            BotaoBarraInferior(itensMenu[3])
+            BotaoBarraInferior(itensMenu[2], Modifier.weight(1f))
+            BotaoBarraInferior(itensMenu[3], Modifier.weight(1f))
         }
     }
 }
 
 @Composable
-private fun BotaoBarraInferior(item: ItemMenuPadrao) {
+private fun BotaoBarraInferior(item: ItemMenuPadrao, modifier: Modifier = Modifier) {
     val corItem = if (item.selecionado) verdePrincipal else textoSecundario
     val formatoIcone = if (item.redondo) CircleShape else RoundedCornerShape(4.dp)
 
     Column(
-        modifier = Modifier
-            .width(56.dp)
-            .clickable(onClick = item.aoClicar),
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier = modifier
+            .heightIn(min = 48.dp)
+            .clickable(onClick = item.aoClicar)
+            .padding(vertical = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
         Box(
             modifier = Modifier
-                .size(22.dp)
+                .size(20.dp)
                 .clip(formatoIcone),
             contentAlignment = Alignment.Center
         ) {
@@ -119,14 +127,15 @@ private fun BotaoBarraInferior(item: ItemMenuPadrao) {
                 modifier = Modifier.fillMaxSize()
             )
         }
-        Spacer(Modifier.height(2.dp))
+        Spacer(Modifier.height(5.dp))
         Text(
             text = item.titulo,
             color = corItem,
-            style = TipografiaAplicativo.labelSmall,
-            textAlign = TextAlign.Center,
-            maxLines = 1,
-            overflow = TextOverflow.Clip
+            style = TipografiaAplicativo.bodyLarge,
+            fontSize = 10.sp,
+            lineHeight = 12.sp,
+            fontWeight = if (item.selecionado) FontWeight.SemiBold else FontWeight.Normal,
+            textAlign = TextAlign.Center
         )
     }
 }

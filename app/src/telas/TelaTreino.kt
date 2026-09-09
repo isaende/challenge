@@ -1,5 +1,6 @@
 package home_page
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -10,7 +11,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -28,7 +28,11 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,12 +49,15 @@ import androidx.compose.ui.unit.sp
 import com.ada.chatmedico.demo.R
 import java.time.DayOfWeek
 import java.time.LocalDate
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 
 private data class TreinoDoDia(
     val titulo: String,
     val detalhe: String,
-    val imagem: Int,
+    val imagem: Int? = null,
     val descanso: Boolean = false
 )
 
@@ -58,10 +65,37 @@ private data class TreinoDoDia(
 fun TelaTreino(
     aoVoltar: () -> Unit,
     aoVoltarInicio: () -> Unit,
+    perfilId: Long,
     modifier: Modifier = Modifier
 ) {
-    val treino = remember { treinoPara(LocalDate.now().dayOfWeek) }
-    var concluido by remember { mutableStateOf(false) }
+    var hoje by remember { mutableStateOf(LocalDate.now()) }
+    val treino = remember(hoje) { treinoPara(hoje.dayOfWeek) }
+    var concluido by remember(perfilId, hoje) { mutableStateOf(false) }
+    var carregando by remember { mutableStateOf(true) }
+    var salvando by remember { mutableStateOf(false) }
+    var erro by remember { mutableStateOf<String?>(null) }
+    var tentativa by remember { mutableStateOf(0) }
+    val escopo = rememberCoroutineScope()
+    BackHandler(onBack = aoVoltar)
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(30_000)
+            hoje = LocalDate.now()
+        }
+    }
+    LaunchedEffect(perfilId, hoje, tentativa) {
+        carregando = true
+        erro = null
+        try {
+            concluido = ApiAda.listarTreinos(perfilId).any { it.dataTreino == hoje.toString() && it.concluidoEm != null }
+        } catch (cancelamento: CancellationException) {
+            throw cancelamento
+        } catch (_: Exception) {
+            erro = "Não foi possível carregar o treino. Tente novamente."
+        } finally {
+            carregando = false
+        }
+    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -92,8 +126,28 @@ fun TelaTreino(
             )
             CartaoPlanoPersonalizado()
             ConteudoTreinoDoDia(treino)
+            if (carregando || salvando) LinearProgressIndicator(Modifier.fillMaxWidth(), color = verdePrincipal)
+            erro?.let {
+                Text(it, color = vermelhoPrincipal, style = TipografiaAplicativo.bodySmall)
+                TextButton(onClick = { tentativa++ }) { Text("Tentar novamente") }
+            }
             Button(
-                onClick = { concluido = !concluido },
+                onClick = {
+                    salvando = true
+                    escopo.launch {
+                        try {
+                            val registros = ApiAda.marcarTreino(perfilId, hoje, !concluido)
+                            concluido = registros.any { it.dataTreino == hoje.toString() && it.concluidoEm != null }
+                        } catch (cancelamento: CancellationException) {
+                            throw cancelamento
+                        } catch (_: Exception) {
+                            erro = "Não foi possível salvar o treino. Tente novamente."
+                        } finally {
+                            salvando = false
+                        }
+                    }
+                },
+                enabled = !carregando && !salvando && erro == null && !treino.descanso,
                 modifier = Modifier.fillMaxWidth().padding(top = 14.dp, bottom = 18.dp).height(48.dp),
                 shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.buttonColors(
@@ -164,12 +218,6 @@ private fun CartaoPlanoPersonalizado() {
                     }
                 }
             }
-            Image(
-                painter = painterResource(R.drawable.onca_treino),
-                contentDescription = "Ada treinando",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.width(132.dp).fillMaxHeight()
-            )
         }
     }
 }
@@ -186,16 +234,18 @@ private fun ConteudoTreinoDoDia(treino: TreinoDoDia) {
             Text("Treino de hoje", color = textoPrimario, style = TipografiaAplicativo.titleMedium)
             Text(treino.titulo, color = verdePrincipal, style = TipografiaAplicativo.bodyMedium, modifier = Modifier.padding(top = 3.dp))
             Text(treino.detalhe, color = textoSecundario, style = TipografiaAplicativo.bodySmall, modifier = Modifier.padding(top = 3.dp, bottom = 12.dp))
-            Image(
-                painter = painterResource(treino.imagem),
-                contentDescription = treino.titulo,
-                contentScale = ContentScale.Fit,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(if (treino.descanso) 270.dp else 360.dp)
-                    .clip(RoundedCornerShape(6.dp))
-                    .background(branco)
-            )
+            treino.imagem?.let { imagem ->
+                Image(
+                    painter = painterResource(imagem),
+                    contentDescription = treino.titulo,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(360.dp)
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(branco)
+                )
+            }
             if (treino.descanso) {
                 Text(
                     text = "Recupere as energias para o próximo treino.",
@@ -213,10 +263,10 @@ private fun treinoPara(dia: DayOfWeek): TreinoDoDia {
     return when (dia) {
         DayOfWeek.MONDAY -> TreinoDoDia("Treino funcional", "20–25 min • Intermediário", R.drawable.treino_segunda)
         DayOfWeek.TUESDAY -> TreinoDoDia("Força e estabilidade", "20–25 min • Intermediário", R.drawable.treino_terca)
-        DayOfWeek.WEDNESDAY -> TreinoDoDia("Dia de descanso", "Recuperação e bem-estar", R.drawable.descanso, true)
+        DayOfWeek.WEDNESDAY -> TreinoDoDia("Dia de descanso", "Recuperação e bem-estar", descanso = true)
         DayOfWeek.THURSDAY -> TreinoDoDia("Cardio", "45–50 min • Intermediário", R.drawable.treino_quinta)
         DayOfWeek.FRIDAY -> TreinoDoDia("Força e mobilidade", "20–25 min • Intermediário", R.drawable.treino_sexta)
         DayOfWeek.SATURDAY,
-        DayOfWeek.SUNDAY -> TreinoDoDia("Dia de descanso", "Recuperação e bem-estar", R.drawable.descanso, true)
+        DayOfWeek.SUNDAY -> TreinoDoDia("Dia de descanso", "Recuperação e bem-estar", descanso = true)
     }
 }

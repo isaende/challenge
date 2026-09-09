@@ -1,5 +1,6 @@
 package home_page
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -68,6 +70,7 @@ fun TelaInicio(
     aoAbrirEmergencia: () -> Unit = {},
     aoAbrirHidratacao: () -> Unit = {},
     aoAbrirExercicios: () -> Unit = {},
+    aoAbrirMetas: () -> Unit = {},
     dadosSaude: DadosSaude = DadosSaude(),
     statusSaude: String = "Conecte o Health Connect",
     aoConectarSaude: () -> Unit = {},
@@ -102,6 +105,7 @@ fun TelaInicio(
                 aoAbrirEmergencia = aoAbrirEmergencia,
                 aoAbrirHidratacao = aoAbrirHidratacao,
                 aoAbrirExercicios = aoAbrirExercicios,
+                aoAbrirMetas = aoAbrirMetas,
                 dadosSaude = dadosSaude,
                 statusSaude = statusSaude,
                 aoConectarSaude = aoConectarSaude,
@@ -175,6 +179,7 @@ private fun CorpoInicio(
     aoAbrirEmergencia: () -> Unit,
     aoAbrirHidratacao: () -> Unit,
     aoAbrirExercicios: () -> Unit,
+    aoAbrirMetas: () -> Unit,
     dadosSaude: DadosSaude,
     statusSaude: String,
     aoConectarSaude: () -> Unit,
@@ -202,7 +207,8 @@ private fun CorpoInicio(
             aoAbrirMedicamentos = aoAbrirMedicamentos,
             aoAbrirEmergencia = aoAbrirEmergencia,
             aoAbrirHidratacao = aoAbrirHidratacao,
-            aoAbrirExercicios = aoAbrirExercicios
+            aoAbrirExercicios = aoAbrirExercicios,
+            aoAbrirMetas = aoAbrirMetas
         )
     }
 }
@@ -335,10 +341,10 @@ private fun CartaoAdaAi(aoAbrirChatMedico: () -> Unit) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .height(200.dp)
+            .heightIn(min = 156.dp)
             .clickable(onClick = aoAbrirChatMedico),
         color = verdeEscuro,
-        shape = RoundedCornerShape(14.dp)
+        shape = RoundedCornerShape(20.dp)
     ) {
         Box(
             modifier = Modifier.background(
@@ -349,40 +355,44 @@ private fun CartaoAdaAi(aoAbrirChatMedico: () -> Unit) {
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(14.dp)
-                    .padding(end = 116.dp)
+                    .fillMaxWidth()
+                    .padding(16.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     CirculoComSigla(
                         sigla = "A",
                         corFundo = branco.copy(alpha = 0.20f),
                         corTexto = branco,
-                        tamanho = 26.dp
+                        tamanho = 22.dp
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(
                         text = "Ada AI",
                         color = branco,
-                        style = TipografiaAplicativo.titleSmall
+                        style = TipografiaAplicativo.titleSmall,
+                        fontSize = 13.sp,
+                        lineHeight = 18.sp
                     )
                     Spacer(Modifier.weight(1f))
                     Text(
                         text = ">",
                         color = branco,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp
+                        fontSize = 16.sp
                     )
                 }
                 Text(
                     text = "Tire suas dúvidas com a Ada AI, nosso chat bot de saúde personalizado para você",
                     color = branco,
                     style = TipografiaAplicativo.bodyMedium,
-                    modifier = Modifier.padding(top = 18.dp)
+                    fontSize = 11.sp,
+                    lineHeight = 16.sp,
+                    modifier = Modifier.padding(top = 8.dp)
                 )
-                Spacer(Modifier.weight(1f))
+                Spacer(Modifier.height(10.dp))
                 Button(
                     onClick = aoAbrirChatMedico,
+                    modifier = Modifier.height(28.dp),
                     contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = branco),
                     shape = RoundedCornerShape(24.dp)
@@ -390,21 +400,13 @@ private fun CartaoAdaAi(aoAbrirChatMedico: () -> Unit) {
                     Text(
                         text = "Ver detalhes",
                         color = verdeEscuro,
-                        style = TipografiaAplicativo.labelLarge
+                        style = TipografiaAplicativo.labelLarge,
+                        fontSize = 10.sp,
+                        lineHeight = 14.sp
                     )
                 }
             }
 
-            Image(
-                painter = painterResource(R.drawable.onca),
-                contentDescription = "Ada AI",
-                modifier = Modifier
-                    .size(104.dp)
-                    .align(Alignment.BottomEnd)
-                    .padding(end = 16.dp, bottom = 16.dp)
-                    .clip(CircleShape)
-                    .background(verdeClaro)
-            )
         }
     }
 }
@@ -416,43 +418,53 @@ private fun BlocoAcoesRapidas(
     aoAbrirMedicamentos: () -> Unit,
     aoAbrirEmergencia: () -> Unit,
     aoAbrirHidratacao: () -> Unit,
-    aoAbrirExercicios: () -> Unit
+    aoAbrirExercicios: () -> Unit,
+    aoAbrirMetas: () -> Unit
 ) {
     val acoes = listOf(
-        ItemAcaoRapida("Telemedicina", R.drawable.buy_online, verdePrincipal, aoAbrirTelemedicina),
-        ItemAcaoRapida("Exames", R.drawable.doctor_notes, azulPrincipal, aoAbrirExames),
-        ItemAcaoRapida("Medicamentos", R.drawable.drugs, verdePrincipal, aoAbrirMedicamentos),
-        ItemAcaoRapida("Emergência", R.drawable.medicine, vermelhoPrincipal, aoAbrirEmergencia),
+        ItemAcaoRapida("Telemedicina", R.drawable.tele_medicina, verdePrincipal, aoAbrirTelemedicina),
+        ItemAcaoRapida("Exames", R.drawable.exames, azulPrincipal, aoAbrirExames),
+        ItemAcaoRapida("Medicamentos", R.drawable.medicamentos, verdePrincipal, aoAbrirMedicamentos),
+        ItemAcaoRapida("Emergência", R.drawable.emergencia, vermelhoPrincipal, aoAbrirEmergencia),
         ItemAcaoRapida("Hidratação", R.drawable.agua, azulPrincipal, aoAbrirHidratacao),
-        ItemAcaoRapida("Exercícios", R.drawable.relatorio_treino, verdePrincipal, aoAbrirExercicios)
+        ItemAcaoRapida("Exercícios", R.drawable.exercicios, verdePrincipal, aoAbrirExercicios),
+        ItemAcaoRapida("Metas", R.drawable.metas, verdePrincipal, aoAbrirMetas)
     )
 
-    Column {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Ações rápidas",
-                color = textoPrimario,
-                fontWeight = FontWeight.Bold,
-                style = TipografiaAplicativo.titleSmall,
-                modifier = Modifier.weight(1f)
-            )
-
-        }
-        Spacer(Modifier.height(8.dp))
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            acoes.chunked(3).forEach { linha ->
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    linha.forEach { acao ->
-                        CartaoAcaoRapida(
-                            acao = acao,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                    repeat(3 - linha.size) {
-                        Spacer(Modifier.weight(1f))
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = branco,
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(0.75.dp, borda)
+    ) {
+        Column(Modifier.padding(10.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Ações rápidas",
+                    color = textoPrimario,
+                    fontWeight = FontWeight.Bold,
+                    style = TipografiaAplicativo.titleLarge,
+                    fontSize = 14.sp,
+                    lineHeight = 20.sp,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            Spacer(Modifier.height(10.dp))
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                acoes.chunked(3).forEach { linha ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        linha.forEach { acao ->
+                            CartaoAcaoRapida(
+                                acao = acao,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                        repeat(3 - linha.size) {
+                            Spacer(Modifier.weight(1f))
+                        }
                     }
                 }
             }
@@ -467,30 +479,31 @@ private fun CartaoAcaoRapida(
 ) {
     Surface(
         modifier = modifier
-            .height(112.dp)
+            .heightIn(min = 84.dp)
             .clickable(onClick = acao.aoClicar),
         color = branco,
-        shape = RoundedCornerShape(8.dp),
-        shadowElevation = 1.dp
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(0.75.dp, borda)
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp),
+            modifier = Modifier.padding(horizontal = 4.dp, vertical = 10.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
+            verticalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterVertically)
         ) {
-            CirculoComImagem(
-                icone = acao.icone,
-                descricao = acao.titulo,
-                corFundo = acao.cor.copy(alpha = 0.12f),
-                tamanho = 42.dp
+            Image(
+                painter = painterResource(acao.icone),
+                contentDescription = acao.titulo,
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.size(32.dp)
             )
             Text(
                 text = acao.titulo,
                 color = textoPrimario,
-                style = TipografiaAplicativo.labelSmall,
-                textAlign = TextAlign.Center,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
+                style = TipografiaAplicativo.bodyLarge,
+                fontSize = 10.sp,
+                lineHeight = 14.sp,
+                fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.Center
             )
         }
     }

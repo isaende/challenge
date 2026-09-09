@@ -1,4 +1,5 @@
 import api.rotasBanco
+import api.ErroResponse
 import factory.ConnectionFactory
 
 // passa para analisar se a IA pode responder a pergunta, 
@@ -54,8 +55,8 @@ fun Application.modulo() {
     }
     install(StatusPages) {
         exception<Throwable> { call, erro ->
-            this@modulo.environment.log.error("Falha tecnica no chat medico: ${erro::class.simpleName}")
-            call.respond(HttpStatusCode.InternalServerError, RespostaChat(RESPOSTA_ERRO, "erro"))
+            this@modulo.environment.log.error("Falha tecnica nao tratada", erro)
+            call.respond(HttpStatusCode.InternalServerError, ErroResponse(RESPOSTA_ERRO))
         }
     }
     routing {

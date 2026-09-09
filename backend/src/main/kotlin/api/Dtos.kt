@@ -19,3 +19,20 @@ import model.AdaResumo
 @Serializable data class AguaResponse(val registros:List<AdaAgua>,val totalMl:Int)
 @Serializable data class ExamesResponse(val exames:List<AdaExames>)
 @Serializable data class ResumoResponse(val resumo:AdaResumo)
+
+@Serializable data class MetasRequest(val aguaMl: Int, val passos: Long, val treinosSemana: Int) {
+    fun validar() {
+        require(aguaMl in 1..10_000) { "Informe uma meta de agua entre 1 e 10000 ml" }
+        require(passos in 1..100_000) { "Informe uma meta entre 1 e 100000 passos" }
+        require(treinosSemana in 1..7) { "Informe entre 1 e 7 treinos por semana" }
+    }
+}
+@Serializable data class TreinoDiaRequest(val data: String, val concluido: Boolean) {
+    fun validar(hoje: java.time.LocalDate = java.time.LocalDate.now()): java.time.LocalDate {
+        val dia = try { java.time.LocalDate.parse(data) } catch (_: java.time.format.DateTimeParseException) {
+            throw IllegalArgumentException("Data de treino invalida")
+        }
+        require(!dia.isAfter(hoje)) { "Nao e possivel concluir um treino futuro" }
+        return dia
+    }
+}

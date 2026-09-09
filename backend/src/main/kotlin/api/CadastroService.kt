@@ -22,15 +22,17 @@ class CadastroService(
         require(dados.nomeCompleto.isNotBlank()){"Informe o nome completo"}
         require(dados.email.contains('@')){"E-mail invalido"}
         require(dados.senha.length>=6){"A senha precisa ter pelo menos 6 caracteres"}
-        require(dados.pesoKg>0 && dados.alturaCm>0){"Peso e altura devem ser maiores que zero"}
+        val alturaCm = if (dados.alturaCm <= 3.0) dados.alturaCm * 100.0 else dados.alturaCm
+        require(dados.pesoKg in 20.0..500.0){"Informe o peso em quilogramas"}
+        require(alturaCm in 50.0..300.0){"Informe a altura em metros (ex.: 1,70) ou centimetros (ex.: 170)"}
         require(usuariosDAO.buscarPorEmail(dados.email,con)==null){"E-mail ja cadastrado"}
         val nascimento=LocalDate.parse(dados.dataNascimento)
         require(!nascimento.isAfter(LocalDate.now())){"Data de nascimento invalida"}
         val idade=Period.between(nascimento,LocalDate.now()).years
         val usuario=usuariosDAO.inserir(AdaUsuarios(email=dados.email.trim(),senhaHash=SegurancaSenha.gerarHash(dados.senha)),con)
         val perfil=perfilDAO.inserir(AdaPerfil(nomeCompleto=dados.nomeCompleto.trim(),dataNascimento=dados.dataNascimento,genero=dados.genero,objetivoPrincipal=dados.objetivoPrincipal,usuarioId=usuario.codUsuario),con)
-        val alturaMetros=dados.alturaCm/100.0
-        medidasDAO.inserir(AdaMedidas(pesoKg=dados.pesoKg,alturaCm=dados.alturaCm,imcCalculado=dados.pesoKg/(alturaMetros*alturaMetros),perfilId=perfil.id),con)
+        val alturaMetros=alturaCm/100.0
+        medidasDAO.inserir(AdaMedidas(pesoKg=dados.pesoKg,alturaCm=alturaCm,imcCalculado=dados.pesoKg/(alturaMetros*alturaMetros),perfilId=perfil.id),con)
         val metaPassos=calcularMetaPassos(idade,dados.objetivoPrincipal)
         val metaAgua=calcularMetaAgua(idade,dados.pesoKg)
         val hoje=LocalDate.now().toString()

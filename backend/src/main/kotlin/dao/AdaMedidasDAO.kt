@@ -7,12 +7,11 @@ import model.AdaMedidas
 class AdaMedidasDAO {
     fun inserir(item: AdaMedidas, conexao: Connection? = null): AdaMedidas {
         val executar: (Connection) -> AdaMedidas = { con ->
-            val id = if (item.id > 0) item.id else ConnectionFactory.proximoId(con, "ADA_MEDIDAS")
-            con.prepareStatement("""INSERT INTO ADA_MEDIDAS
-                (id, pesoKg, alturaCm, imcCalculado, origem, medidoEm, ADA_PERFIL_id)
-                VALUES (?, ?, ?, ?, ?, SYSTIMESTAMP, ?)""").use { ps ->
-                ps.setLong(1,id); ps.setDouble(2,item.pesoKg); ps.setDouble(3,item.alturaCm); ps.setDouble(4,item.imcCalculado)
-                ps.setString(5,item.origem); ps.setLong(6,item.perfilId); ps.executeUpdate()
+            val id = ConnectionFactory.inserirRetornandoId(con, """INSERT INTO ADA_MEDIDAS
+                (pesoKg, alturaCm, imcCalculado, origem, medidoEm, ADA_PERFIL_id)
+                VALUES (?, ?, ?, ?, SYSTIMESTAMP, ?)""") { ps ->
+                ps.setDouble(1,item.pesoKg); ps.setDouble(2,item.alturaCm); ps.setDouble(3,item.imcCalculado)
+                ps.setString(4,item.origem); ps.setLong(5,item.perfilId)
             }; item.copy(id=id)
         }; return conexao?.let(executar) ?: ConnectionFactory.transaction(executar)
     }

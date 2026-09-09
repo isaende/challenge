@@ -15,6 +15,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.io.File
 import java.security.MessageDigest
+import java.sql.SQLException
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.Base64
@@ -27,6 +28,21 @@ fun Route.rotasBanco() {
     val cadastroService=CadastroService(); val perfilDAO=AdaPerfilDAO(); val metasDAO=AdaMetasDAO()
     val aguaDAO=AdaAguaDAO(); val resumoDAO=AdaResumoDAO(); val medicamentosDAO=AdaMedicamentosDAO()
     val agendaDAO=AdaAgendaDAO(); val dosesDAO=AdaDosesDAO(); val examesDAO=AdaExamesDAO()
+    val treinosDAO = AdaTreinosDAO()
+
+    get("/api/perfis/{perfilId}/metas") { executar(call) { metasDAO.listarPorPerfil(perfilId(call)) } }
+    post("/api/perfis/{perfilId}/metas") { executar(call) {
+        val req = call.receive<MetasRequest>()
+        req.validar()
+        metasDAO.salvarManuais(perfilId(call), req.aguaMl, req.passos, req.treinosSemana)
+    } }
+    get("/api/perfis/{perfilId}/treinos") { executar(call) { treinosDAO.listarPorPerfil(perfilId(call)) } }
+    patch("/api/perfis/{perfilId}/treinos/conclusao") { executar(call) {
+        val req = call.receive<TreinoDiaRequest>()
+        val dia = req.validar()
+        treinosDAO.marcarDia(perfilId(call), dia.toString(), req.concluido)
+        treinosDAO.listarPorPerfil(perfilId(call))
+    } }
 
     post("/api/auth/cadastro") { executar(call) { cadastroService.cadastrar(call.receive()) } }
     post("/api/auth/login") { executar(call) { cadastroService.login(call.receive()) } }
@@ -53,4 +69,4 @@ fun Route.rotasBanco() {
 }
 
 private fun perfilId(call:io.ktor.server.application.ApplicationCall)=call.parameters["perfilId"]?.toLongOrNull()?:error("Perfil invalido")
-private suspend fun executar(call:io.ktor.server.application.ApplicationCall,status:HttpStatusCode=HttpStatusCode.OK,bloco:suspend()->Any)=try { val resposta=withContext(Dispatchers.IO){bloco()};call.respond(status,resposta) } catch(erro:IllegalArgumentException) { call.respond(HttpStatusCode.BadRequest,ErroResponse(erro.message?:"Dados invalidos")) } catch(erro:IllegalStateException) { call.respond(HttpStatusCode.Unauthorized,ErroResponse(erro.message?:"Operacao nao autorizada")) }
+private suspend fun executar(call:io.ktor.server.application.ApplicationCall,status:HttpStatusCode=HttpStatusCode.OK,bloco:suspend()->Any)=try { val resposta=withContext(Dispatchers.IO){bloco()};call.respond(status,resposta) } catch(erro:IllegalArgumentException) { call.respond(HttpStatusCode.BadRequest,ErroResponse(erro.message?:"Dados invalidos")) } catch(erro:IllegalStateException) { call.respond(HttpStatusCode.Unauthorized,ErroResponse(erro.message?:"Operacao nao autorizada")) } catch(erro:SQLException) { call.application.environment.log.error("Falha ao executar operacao no Oracle",erro);call.respond(HttpStatusCode.InternalServerError,ErroResponse("Nao foi possivel salvar os dados no Oracle. Verifique os valores e tente novamente.")) }

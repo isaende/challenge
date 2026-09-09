@@ -36,7 +36,8 @@ private enum class TelaAtual {
     EMERGENCIA,
     HIDRATACAO,
     EXERCICIOS,
-    TREINO
+    TREINO,
+    METAS
 }
 
 class AtividadePrincipal : ComponentActivity() {
@@ -49,6 +50,7 @@ class AtividadePrincipal : ComponentActivity() {
             val repositorioSessao = remember { RepositorioSessao(this@AtividadePrincipal) }
             var sessao by remember { mutableStateOf(repositorioSessao.carregar()) }
             var telaAtual by remember { mutableStateOf(if (sessao == null) TelaAtual.LOGIN else TelaAtual.INICIO) }
+            var voltarTreinoParaMetas by remember { mutableStateOf(false) }
             var dadosSaude by remember { mutableStateOf(DadosSaude()) }
             var statusSaude by remember { mutableStateOf("Verificando Health Connect...") }
             var mostrarBotaoConectarSaude by remember { mutableStateOf(false) }
@@ -171,6 +173,7 @@ class AtividadePrincipal : ComponentActivity() {
                         aoAbrirEmergencia = { telaAtual = TelaAtual.EMERGENCIA },
                         aoAbrirHidratacao = { telaAtual = TelaAtual.HIDRATACAO },
                         aoAbrirExercicios = { telaAtual = TelaAtual.EXERCICIOS },
+                        aoAbrirMetas = { telaAtual = TelaAtual.METAS },
                         dadosSaude = dadosSaude,
                         statusSaude = statusSaude,
                         aoConectarSaude = { conectarHealthConnect() },
@@ -221,14 +224,34 @@ class AtividadePrincipal : ComponentActivity() {
                             passosHoje = dadosSaude.passos ?: 0L,
                             carregando = dadosSaude.passos == null,
                             aoAtualizar = { atualizarDadosSaude() },
-                            aoIniciarTreino = { telaAtual = TelaAtual.TREINO },
+                            aoIniciarTreino = { voltarTreinoParaMetas = false; telaAtual = TelaAtual.TREINO },
                             aoVoltar = { telaAtual = TelaAtual.INICIO },
                             metaPassos = sessao?.metaPassos ?: 8000
                         )
 
                         TelaAtual.TREINO -> TelaTreino(
-                            aoVoltar = { telaAtual = TelaAtual.EXERCICIOS },
-                            aoVoltarInicio = { telaAtual = TelaAtual.INICIO }
+                            aoVoltar = { telaAtual = if (voltarTreinoParaMetas) TelaAtual.METAS else TelaAtual.EXERCICIOS },
+                            aoVoltarInicio = { telaAtual = TelaAtual.INICIO },
+                            perfilId = sessao?.perfilId ?: 0
+                        )
+
+                        TelaAtual.METAS -> TelaMetas(
+                            perfilId = sessao?.perfilId ?: 0,
+                            metaAguaInicial = sessao?.metaAguaMl ?: 2500,
+                            metaPassosInicial = sessao?.metaPassos ?: 8000,
+                            passosHoje = dadosSaude.passos,
+                            statusPassos = statusSaude,
+                            aoMetasSalvas = { agua, passos ->
+                                sessao?.let { atual ->
+                                    val atualizada = atual.copy(metaAguaMl = agua, metaPassos = passos)
+                                    repositorioSessao.salvar(atualizada)
+                                    sessao = atualizada
+                                }
+                            },
+                            aoVoltar = { telaAtual = TelaAtual.INICIO },
+                            aoAbrirExames = { telaAtual = TelaAtual.EXAMES },
+                            aoAbrirTreino = { voltarTreinoParaMetas = true; telaAtual = TelaAtual.TREINO },
+                            aoAtualizarPassos = { conectarHealthConnect() }
                         )
                     }
                 }

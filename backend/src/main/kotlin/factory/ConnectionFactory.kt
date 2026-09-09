@@ -2,6 +2,7 @@ package factory
 
 import java.sql.Connection
 import java.sql.DriverManager
+import java.sql.PreparedStatement
 import java.util.Properties
 
 object ConnectionFactory {
@@ -50,13 +51,17 @@ object ConnectionFactory {
         }
     }
 
-    fun proximoId(conexao: Connection, tabela: String, coluna: String = "id"): Long {
-        require(tabela.matches(Regex("ADA_[A-Z_]+")) && coluna.matches(Regex("[a-z_]+")))
-        conexao.prepareStatement("SELECT NVL(MAX($coluna), 0) + 1 FROM $tabela").use { comando ->
-            return comando.executeQuery().use { resultado ->
-                check(resultado.next())
-                resultado.getLong(1)
-            }
+    fun inserirRetornandoId(
+        conexao: Connection,
+        sql: String,
+        colunaId: String = "ID",
+        configurar: (PreparedStatement) -> Unit
+    ): Long = conexao.prepareStatement(sql, arrayOf(colunaId)).use { comando ->
+        configurar(comando)
+        comando.executeUpdate()
+        comando.generatedKeys.use { chaves ->
+            check(chaves.next()) { "O Oracle nao retornou o ID gerado para $colunaId" }
+            chaves.getLong(1)
         }
     }
 }

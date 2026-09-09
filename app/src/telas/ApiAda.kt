@@ -11,14 +11,17 @@ import io.ktor.client.request.get
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
 import java.time.LocalDate
 import java.io.File
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
+// No emulador do Android Studio, 10.0.2.2 aponta para o computador host.
 private const val URL_API_ADA = "http://10.0.2.2:8080"
 
 @Serializable data class CadastroApi(val nomeCompleto:String,val email:String,val dataNascimento:String,val pesoKg:Double,val alturaCm:Double,val genero:String,val objetivoPrincipal:String,val senha:String)
@@ -33,14 +36,38 @@ private const val URL_API_ADA = "http://10.0.2.2:8080"
 @Serializable data class ExameNovoApi(val nome:String,val data:String,val tipoMime:String,val nomeArquivo:String,val arquivoBase64:String)
 @Serializable data class ExameApi(val id:Long,val nomeExame:String,val dataExame:String,val tipoMime:String,val nomeArquivo:String,val armazenamento:String,val checksum:String,val enviadoEm:String?=null,val perfilId:Long)
 @Serializable data class ExamesRespostaApi(val exames:List<ExameApi>)
+@Serializable data class MetaApi(val tipo: String, val valorAlvo: Double)
+@Serializable data class MetasNovasApi(val aguaMl: Int, val passos: Long, val treinosSemana: Int)
+@Serializable data class TreinoApi(val dataTreino: String, val concluidoEm: String? = null)
+@Serializable data class TreinoDiaApi(val data: String, val concluido: Boolean)
+@Serializable private data class ErroApi(val mensagem:String)
+
+private suspend inline fun <reified T> HttpResponse.corpoOuErro():T {
+    if(status.isSuccess()) return body()
+    val mensagem=runCatching { body<ErroApi>().mensagem }.getOrDefault("Falha na comunicacao com o servidor")
+    throw IllegalArgumentException(mensagem)
+}
 
 object ApiAda {
     private val cliente=HttpClient(OkHttp) {
         install(ContentNegotiation) { json(Json { ignoreUnknownKeys=true }) }
     }
 
-    suspend fun cadastrar(dados:CadastroApi):SessaoUsuario=cliente.post("$URL_API_ADA/api/auth/cadastro") { contentType(ContentType.Application.Json);setBody(dados) }.body()
-    suspend fun login(email:String,senha:String):SessaoUsuario=cliente.post("$URL_API_ADA/api/auth/login") { contentType(ContentType.Application.Json);setBody(LoginApi(email,senha)) }.body()
+    suspend fun listarMetas(perfilId: Long): List<MetaApi> =
+        cliente.get("$URL_API_ADA/api/perfis/$perfilId/metas").corpoOuErro()
+    suspend fun salvarMetas(perfilId: Long, metas: MetasNovasApi): List<MetaApi> =
+        cliente.post("$URL_API_ADA/api/perfis/$perfilId/metas") {
+            contentType(ContentType.Application.Json); setBody(metas)
+        }.corpoOuErro()
+    suspend fun listarTreinos(perfilId: Long): List<TreinoApi> =
+        cliente.get("$URL_API_ADA/api/perfis/$perfilId/treinos").corpoOuErro()
+    suspend fun marcarTreino(perfilId: Long, data: LocalDate, concluido: Boolean): List<TreinoApi> =
+        cliente.patch("$URL_API_ADA/api/perfis/$perfilId/treinos/conclusao") {
+            contentType(ContentType.Application.Json); setBody(TreinoDiaApi(data.toString(), concluido))
+        }.corpoOuErro()
+
+    suspend fun cadastrar(dados:CadastroApi):SessaoUsuario=cliente.post("$URL_API_ADA/api/auth/cadastro") { contentType(ContentType.Application.Json);setBody(dados) }.corpoOuErro()
+    suspend fun login(email:String,senha:String):SessaoUsuario=cliente.post("$URL_API_ADA/api/auth/login") { contentType(ContentType.Application.Json);setBody(LoginApi(email,senha)) }.corpoOuErro()
     suspend fun listarMedicamentos(perfilId:Long): List<MedicamentoApi> = cliente.get("$URL_API_ADA/api/perfis/$perfilId/medicamentos").body()
     suspend fun adicionarMedicamento(perfilId:Long,item:MedicamentoNovoApi):MedicamentoApi=cliente.post("$URL_API_ADA/api/perfis/$perfilId/medicamentos") { contentType(ContentType.Application.Json);setBody(item) }.body()
     suspend fun marcarMedicamentoTomado(perfilId:Long,medicamentoId:Long) {

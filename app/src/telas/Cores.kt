@@ -3,7 +3,7 @@ package home_page
 import androidx.compose.ui.graphics.Color
 
 // Paleta unica do aplicativo. As telas devem consumir apenas estas cores.
-val verdePrincipal = Color(0xFF007A4D)
+val verdePrincipal = Color(0xFF004B23)
 val verdeEscuro = Color(0xFF005C3A)
 val verdeClaro = Color(0xFFE8F7EF)
 

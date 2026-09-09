@@ -198,7 +198,7 @@ private fun IndicadorPassos(passos: Long, metaPassos: Long, progresso: Float, ca
 private fun ResumoPassos(passosRestantes: Long, progresso: Float) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         CartaoResumoPassos("Passos restantes", formatarNumero(passosRestantes), R.drawable.sapato, Modifier.weight(1f))
-        CartaoResumoPassos("Meta concluída", "${(progresso * 100).toInt()}%", R.drawable.relatorio_treino, Modifier.weight(1f))
+        CartaoResumoPassos("Meta concluída", "${(progresso * 100).toInt()}%", R.drawable.list, Modifier.weight(1f))
     }
 }
 

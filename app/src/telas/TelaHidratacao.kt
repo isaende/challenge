@@ -128,7 +128,7 @@ fun TelaHidratacao(aoVoltar: () -> Unit, perfilId: Long, metaDiariaMl: Int, modi
                 aoAdicionar = ::adicionarAgua,
                 aoDigitarOutro = { mostrarValorManual = true }
             )
-            HistoricoHidratacao(registros, Modifier.weight(1f))
+            HistoricoHidratacao(registros, metaDiariaMl, Modifier.weight(1f))
             DicaHidratacao()
         }
     }
@@ -175,8 +175,7 @@ private fun CabecalhoHidratacao(aoVoltar: () -> Unit) {
 private fun CartaoDestaqueHidratacao() {
     BalaoDicaAda(
         titulo = "Hidratação é energia, foco e resultados!",
-        texto = "Seu corpo agradece cada gole.",
-        imagem = R.drawable.onca_comprimido
+        texto = "Seu corpo agradece cada gole."
     )
 }
 
@@ -244,12 +243,12 @@ private fun BotaoQuantidade(texto: String, icone: Int, modifier: Modifier, aoCli
 }
 
 @Composable
-private fun HistoricoHidratacao(registros: List<RegistroAgua>, modifier: Modifier = Modifier) {
+private fun HistoricoHidratacao(registros: List<RegistroAgua>, metaDiariaMl: Int, modifier: Modifier = Modifier) {
     Surface(modifier.fillMaxWidth(), RoundedCornerShape(12.dp), color = branco, shadowElevation = 1.dp) {
         Column(Modifier.padding(14.dp).verticalScroll(rememberScrollState())) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Histórico de hoje", color = textoPrimario, style = TipografiaAplicativo.titleSmall, modifier = Modifier.weight(1f))
-                Text("Meta: 2,5 L", color = verdePrincipal, style = TipografiaAplicativo.labelSmall)
+                Text("Meta: ${formatarLitros(metaDiariaMl)}", color = verdePrincipal, style = TipografiaAplicativo.labelSmall)
             }
             if (registros.isEmpty()) {
                 Text("Nenhum copo registrado ainda.", color = textoSecundario, style = TipografiaAplicativo.bodySmall, modifier = Modifier.padding(vertical = 18.dp).align(Alignment.CenterHorizontally))
@@ -273,8 +272,7 @@ private fun HistoricoHidratacao(registros: List<RegistroAgua>, modifier: Modifie
 private fun DicaHidratacao() {
     BalaoDicaAda(
         titulo = "Dica da Ada AI",
-        texto = "Você treina pesado! Mantenha sua hidratação em dia para melhorar sua performance e recuperação.",
-        imagem = R.drawable.onca_comprimido
+        texto = "Você treina pesado! Mantenha sua hidratação em dia para melhorar sua performance e recuperação."
     )
 }
 
