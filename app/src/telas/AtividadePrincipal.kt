@@ -200,8 +200,17 @@ class AtividadePrincipal : ComponentActivity() {
                         aoAbrirExames = { telaAtual = TelaAtual.EXAMES },
                         aoAdicionar = { telaAtual = TelaAtual.METAS },
                         aoPerfilCarregado = { atualizada ->
-                            repositorioSessao.salvar(atualizada)
-                            sessao = atualizada
+                            if (sessao?.perfilId == atualizada.perfilId && telaAtual == TelaAtual.PERFIL) {
+                                repositorioSessao.salvar(atualizada)
+                                sessao = atualizada
+                            }
+                        },
+                        aoSair = {
+                            repositorioSessao.limpar()
+                            sessao = null
+                            telaAnteriorPerfil = TelaAtual.INICIO
+                            voltarTreinoParaMetas = false
+                            telaAtual = TelaAtual.LOGIN
                         }
                     )
 

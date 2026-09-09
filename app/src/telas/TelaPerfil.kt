@@ -45,6 +45,7 @@ fun TelaPerfil(
     aoAbrirExames: () -> Unit,
     aoAdicionar: () -> Unit,
     aoPerfilCarregado: (SessaoUsuario) -> Unit,
+    aoSair: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var dados by remember(perfilId) { mutableStateOf<DadosPerfilApi?>(null) }
@@ -83,13 +84,29 @@ fun TelaPerfil(
         containerColor = fundoPrincipal,
         contentWindowInsets = WindowInsets(0.dp),
         bottomBar = {
-            BarraInferiorPadrao(
-                itemSelecionado = ItemBarraInferior.PERFIL,
-                aoAbrirInicio = aoAbrirInicio,
-                aoAbrirMonitorar = aoAbrirMonitorar,
-                aoAdicionar = aoAdicionar,
-                aoAbrirExames = aoAbrirExames
-            )
+            Column {
+                OutlinedButton(
+                    onClick = aoSair,
+                    modifier = Modifier.fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                        .heightIn(min = 48.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    border = BorderStroke(1.dp, vermelhoPrincipal),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = transparente,
+                        contentColor = vermelhoPrincipal
+                    )
+                ) {
+                    Text("Sair da conta", fontWeight = FontWeight.SemiBold)
+                }
+                BarraInferiorPadrao(
+                    itemSelecionado = ItemBarraInferior.PERFIL,
+                    aoAbrirInicio = aoAbrirInicio,
+                    aoAbrirMonitorar = aoAbrirMonitorar,
+                    aoAdicionar = aoAdicionar,
+                    aoAbrirExames = aoAbrirExames
+                )
+            }
         }
     ) { espaco ->
         Column(Modifier.fillMaxSize().padding(espaco)) {
