@@ -27,6 +27,9 @@ private const val URL_API_ADA = "http://10.0.2.2:8080"
 @Serializable data class CadastroApi(val nomeCompleto:String,val email:String,val dataNascimento:String,val pesoKg:Double,val alturaCm:Double,val genero:String,val objetivoPrincipal:String,val senha:String)
 @Serializable data class LoginApi(val email:String,val senha:String)
 @Serializable data class SessaoUsuario(val usuarioId:Long,val perfilId:Long,val nomeCompleto:String,val email:String,val metaAguaMl:Int,val metaPassos:Long)
+@Serializable data class PerfilApi(val nomeCompleto: String, val dataNascimento: String, val genero: String, val objetivoPrincipal: String)
+@Serializable data class MedidasPerfilApi(val pesoKg: Double, val alturaCm: Double)
+@Serializable data class DadosPerfilApi(val auth: SessaoUsuario, val perfil: PerfilApi, val medidas: MedidasPerfilApi? = null)
 @Serializable data class MedicamentoApi(val id:Long,val nome:String,val dosagem:String,val horario:String,val alarmeAtivo:Boolean,val tomadoEm:String?=null)
 @Serializable data class MedicamentoNovoApi(val nome:String,val dosagem:String,val horario:String,val alarmeAtivo:Boolean)
 @Serializable data class AguaNovaApi(val quantidadeMl:Int)
@@ -39,6 +42,7 @@ private const val URL_API_ADA = "http://10.0.2.2:8080"
 @Serializable data class MetaApi(val tipo: String, val valorAlvo: Double)
 @Serializable data class MetasNovasApi(val aguaMl: Int, val passos: Long, val treinosSemana: Int)
 @Serializable data class TreinoApi(val dataTreino: String, val concluidoEm: String? = null)
+@Serializable data class HabitoDiaApi(val data: String, val aguaMl: Long = 0, val passos: Long? = null)
 @Serializable data class TreinoDiaApi(val data: String, val concluido: Boolean)
 @Serializable private data class ErroApi(val mensagem:String)
 
@@ -53,6 +57,9 @@ object ApiAda {
         install(ContentNegotiation) { json(Json { ignoreUnknownKeys=true }) }
     }
 
+    suspend fun carregarPerfil(perfilId: Long): DadosPerfilApi =
+        cliente.get("$URL_API_ADA/api/perfis/$perfilId").corpoOuErro()
+
     suspend fun listarMetas(perfilId: Long): List<MetaApi> =
         cliente.get("$URL_API_ADA/api/perfis/$perfilId/metas").corpoOuErro()
     suspend fun salvarMetas(perfilId: Long, metas: MetasNovasApi): List<MetaApi> =
@@ -61,6 +68,8 @@ object ApiAda {
         }.corpoOuErro()
     suspend fun listarTreinos(perfilId: Long): List<TreinoApi> =
         cliente.get("$URL_API_ADA/api/perfis/$perfilId/treinos").corpoOuErro()
+    suspend fun listarHabitosSemana(perfilId: Long, inicio: LocalDate): List<HabitoDiaApi> =
+        cliente.get("$URL_API_ADA/api/perfis/$perfilId/habitos?inicio=$inicio").corpoOuErro()
     suspend fun marcarTreino(perfilId: Long, data: LocalDate, concluido: Boolean): List<TreinoApi> =
         cliente.patch("$URL_API_ADA/api/perfis/$perfilId/treinos/conclusao") {
             contentType(ContentType.Application.Json); setBody(TreinoDiaApi(data.toString(), concluido))

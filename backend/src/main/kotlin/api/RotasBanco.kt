@@ -30,6 +30,15 @@ fun Route.rotasBanco() {
     val agendaDAO=AdaAgendaDAO(); val dosesDAO=AdaDosesDAO(); val examesDAO=AdaExamesDAO()
     val treinosDAO = AdaTreinosDAO()
 
+    get("/api/perfis/{perfilId}/habitos") { executar(call) {
+        val inicio = try {
+            LocalDate.parse(call.request.queryParameters["inicio"] ?: LocalDate.now().toString())
+        } catch (_: java.time.format.DateTimeParseException) {
+            throw IllegalArgumentException("Data inicial invalida")
+        }
+        AdaHabitosDAO().listarSemana(perfilId(call), inicio)
+    } }
+
     get("/api/perfis/{perfilId}/metas") { executar(call) { metasDAO.listarPorPerfil(perfilId(call)) } }
     post("/api/perfis/{perfilId}/metas") { executar(call) {
         val req = call.receive<MetasRequest>()
@@ -50,7 +59,8 @@ fun Route.rotasBanco() {
         val id=perfilId(call); val perfil=perfilDAO.buscarPorId(id)?:error("Perfil nao encontrado")
         val usuario=AdaUsuariosDAO().buscarPorId(perfil.usuarioId)?:error("Usuario nao encontrado")
         val metas=metasDAO.listarPorPerfil(id)
-        DadosPerfilResponse(AuthResponse(usuario.codUsuario,id,perfil.nomeCompleto,usuario.email,metas.firstOrNull{it.tipo=="AGUA"}?.valorAlvo?.toInt()?:0,metas.firstOrNull{it.tipo=="PASSOS"}?.valorAlvo?.toLong()?:0),metas)
+        val medidas = AdaMedidasDAO().listarPorPerfil(id).firstOrNull()
+        DadosPerfilResponse(AuthResponse(usuario.codUsuario,id,perfil.nomeCompleto,usuario.email,metas.firstOrNull{it.tipo=="AGUA"}?.valorAlvo?.toInt()?:0,metas.firstOrNull{it.tipo=="PASSOS"}?.valorAlvo?.toLong()?:0),metas,perfil,medidas)
     } }
     get("/api/perfis/{perfilId}/agua") { executar(call) { val itens=aguaDAO.listarPorPerfilEData(perfilId(call),call.request.queryParameters["data"]?:LocalDate.now().toString());AguaResponse(itens,itens.sumOf(AdaAgua::quantidadeMl)) } }
     post("/api/perfis/{perfilId}/agua") { executar(call,HttpStatusCode.Created) { val req=call.receive<AguaRequest>();require(req.quantidadeMl in 1..10_000){"Quantidade de agua invalida"};aguaDAO.inserir(AdaAgua(quantidadeMl=req.quantidadeMl,perfilId=perfilId(call))) } }

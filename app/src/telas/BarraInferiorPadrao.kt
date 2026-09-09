@@ -20,6 +20,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,6 +40,9 @@ enum class ItemBarraInferior {
     NENHUM
 }
 
+// Mantém o acesso ao perfil em todas as telas que usam o menu compartilhado.
+val LocalAbrirPerfil = staticCompositionLocalOf<() -> Unit> { {} }
+
 private data class ItemMenuPadrao(
     val titulo: String,
     val icone: Int,
@@ -54,7 +58,7 @@ fun BarraInferiorPadrao(
     aoAbrirMonitorar: () -> Unit = {},
     aoAdicionar: () -> Unit = {},
     aoAbrirExames: () -> Unit = {},
-    aoAbrirPerfil: () -> Unit = {}
+    aoAbrirPerfil: () -> Unit = LocalAbrirPerfil.current
 ) {
     val itensMenu = listOf(
         ItemMenuPadrao("Inicio", R.drawable.house_building, itemSelecionado == ItemBarraInferior.INICIO, aoClicar = aoAbrirInicio),

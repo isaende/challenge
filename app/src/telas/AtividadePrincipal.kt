@@ -37,7 +37,8 @@ private enum class TelaAtual {
     HIDRATACAO,
     EXERCICIOS,
     TREINO,
-    METAS
+    METAS,
+    PERFIL
 }
 
 class AtividadePrincipal : ComponentActivity() {
@@ -51,6 +52,7 @@ class AtividadePrincipal : ComponentActivity() {
             var sessao by remember { mutableStateOf(repositorioSessao.carregar()) }
             var telaAtual by remember { mutableStateOf(if (sessao == null) TelaAtual.LOGIN else TelaAtual.INICIO) }
             var voltarTreinoParaMetas by remember { mutableStateOf(false) }
+            var telaAnteriorPerfil by remember { mutableStateOf(TelaAtual.INICIO) }
             var dadosSaude by remember { mutableStateOf(DadosSaude()) }
             var statusSaude by remember { mutableStateOf("Verificando Health Connect...") }
             var mostrarBotaoConectarSaude by remember { mutableStateOf(false) }
@@ -140,6 +142,10 @@ class AtividadePrincipal : ComponentActivity() {
             // diz ao aplicativo Se a tela atual for início, renderize a TelaInicio. Se for exames, renderize a TelaExames
             val densidadeAtual = LocalDensity.current
             CompositionLocalProvider(
+                LocalAbrirPerfil provides {
+                    if (telaAtual != TelaAtual.PERFIL) telaAnteriorPerfil = telaAtual
+                    telaAtual = TelaAtual.PERFIL
+                },
                 LocalDensity provides Density(
                     density = densidadeAtual.density,
                     fontScale = densidadeAtual.fontScale * 1.19f
@@ -179,7 +185,24 @@ class AtividadePrincipal : ComponentActivity() {
                         aoConectarSaude = { conectarHealthConnect() },
                         mostrarBotaoConectarSaude = mostrarBotaoConectarSaude,
                         textoBotaoSaude = textoBotaoSaude,
-                        nomeUsuario = sessao?.nomeCompleto.orEmpty()
+                        nomeUsuario = sessao?.nomeCompleto.orEmpty(),
+                        aoAbrirPerfil = {
+                            telaAnteriorPerfil = TelaAtual.INICIO
+                            telaAtual = TelaAtual.PERFIL
+                        }
+                    )
+
+                    TelaAtual.PERFIL -> TelaPerfil(
+                        perfilId = sessao?.perfilId ?: 0,
+                        aoVoltar = { telaAtual = telaAnteriorPerfil },
+                        aoAbrirInicio = { telaAtual = TelaAtual.INICIO },
+                        aoAbrirMonitorar = { telaAtual = TelaAtual.EXERCICIOS },
+                        aoAbrirExames = { telaAtual = TelaAtual.EXAMES },
+                        aoAdicionar = { telaAtual = TelaAtual.METAS },
+                        aoPerfilCarregado = { atualizada ->
+                            repositorioSessao.salvar(atualizada)
+                            sessao = atualizada
+                        }
                     )
 
                     TelaAtual.CHAT_MEDICO -> TelaChatMedico(

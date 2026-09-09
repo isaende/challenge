@@ -10,9 +10,12 @@ val sincronizarImagensDrawable by tasks.registering(Sync::class) {
     from("src/images") {
         include("**/*.png", "**/*.jpg", "**/*.jpeg", "**/*.webp")
         exclude("logo.png")
+        exclude("cadastro/**")
         exclude { detalhe -> detalhe.file.length() == 0L }
         eachFile {
-            path = name.lowercase().replace("-", "_")
+            // O calendário do perfil é diferente do usado no cadastro.
+            path = if (file.name == "agenda.png" && file.parentFile.name == "icones") "agenda_perfil.png"
+                else name.lowercase().replace("-", "_")
         }
         includeEmptyDirs = false
     }

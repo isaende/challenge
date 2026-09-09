@@ -77,6 +77,7 @@ fun TelaInicio(
     mostrarBotaoConectarSaude: Boolean = true,
     textoBotaoSaude: String = "Conectar",
     nomeUsuario: String = "",
+    aoAbrirPerfil: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -86,7 +87,8 @@ fun TelaInicio(
         bottomBar = {
             BarraInferiorPadrao(
                 itemSelecionado = ItemBarraInferior.INICIO,
-                aoAbrirExames = aoAbrirExames
+                aoAbrirExames = aoAbrirExames,
+                aoAbrirPerfil = aoAbrirPerfil
             )
         }
     ) { espacoTela ->
@@ -96,7 +98,7 @@ fun TelaInicio(
                 .padding(espacoTela)
                 .verticalScroll(rememberScrollState())
         ) {
-            CabecalhoInicio(nomeUsuario)
+            CabecalhoInicio(nomeUsuario, aoAbrirPerfil)
             CorpoInicio(
                 aoAbrirChatMedico = aoAbrirChatMedico,
                 aoAbrirTelemedicina = aoAbrirTelemedicina,
@@ -117,7 +119,7 @@ fun TelaInicio(
 }
 
 @Composable
-private fun CabecalhoInicio(nomeUsuario: String) {
+private fun CabecalhoInicio(nomeUsuario: String, aoAbrirPerfil: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -159,12 +161,13 @@ private fun CabecalhoInicio(nomeUsuario: String) {
             )
             Image(
                 painter = painterResource(R.drawable.user),
-                contentDescription = "Foto de perfil",
+                contentDescription = "Abrir meu perfil",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .size(48.dp)
                     .clip(CircleShape)
                     .background(branco)
+                    .clickable(onClick = aoAbrirPerfil)
             )
         }
     }
@@ -359,11 +362,11 @@ private fun CartaoAdaAi(aoAbrirChatMedico: () -> Unit) {
                     .padding(16.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    CirculoComSigla(
-                        sigla = "A",
-                        corFundo = branco.copy(alpha = 0.20f),
-                        corTexto = branco,
-                        tamanho = 22.dp
+                    Image(
+                        painter = painterResource(R.drawable.ia),
+                        contentDescription = "Ícone do chatbot Ada AI",
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier.size(22.dp)
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(

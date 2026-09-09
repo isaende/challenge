@@ -5,6 +5,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -73,6 +74,25 @@ fun TelaMetas(
     val diasConcluidos = treinos.orEmpty().filter { it.concluidoEm != null }.map { it.dataTreino }.toSet()
     val treinosSemana = (0L..6L).count { inicioSemana.plusDays(it).toString() in diasConcluidos }
     val pronto = !carregando && aguaMl != null && treinos != null
+    var habitosSemana by remember(perfilId, inicioSemana) { mutableStateOf<List<HabitoDiaApi>?>(null) }
+    var carregandoHabitos by remember { mutableStateOf(false) }
+    var erroHabitos by remember { mutableStateOf(false) }
+    var tentativaHabitos by remember { mutableIntStateOf(0) }
+
+    LaunchedEffect(perfilId, inicioSemana, hoje, atualizacao, tentativaHabitos) {
+        carregandoHabitos = true
+        erroHabitos = false
+        habitosSemana = null
+        try {
+            habitosSemana = ApiAda.listarHabitosSemana(perfilId, inicioSemana)
+        } catch (cancelamento: CancellationException) {
+            throw cancelamento
+        } catch (_: Exception) {
+            erroHabitos = true
+        } finally {
+            carregandoHabitos = false
+        }
+    }
 
     BackHandler(onBack = aoVoltar)
     val ciclo = LocalLifecycleOwner.current.lifecycle
@@ -207,7 +227,7 @@ fun TelaMetas(
                         roxoPrincipal, if (treinos == null) null else total.toFloat(), metas.treinosSemana.toFloat(), "Ver semana", pronto) { semanasAtras = semana.toInt() }
                 }
             }
-            Text("Treinos da semana", style = TipografiaAplicativo.titleSmall, fontWeight = FontWeight.Bold)
+            Text("Hábitos diários", style = TipografiaAplicativo.titleSmall, fontWeight = FontWeight.Bold)
             Surface(color = branco, shape = RoundedCornerShape(16.dp), border = BorderStroke(1.dp, borda)) {
                 Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -218,29 +238,56 @@ fun TelaMetas(
                         TextButton(onClick = { semanasAtras-- }, enabled = semanasAtras > 0 && !salvando,
                             modifier = Modifier.semantics { contentDescription = "Próxima semana" }) { Text("›", fontSize = 24.sp) }
                     }
-                    Row(Modifier.fillMaxWidth()) {
-                        listOf("S", "T", "Q", "Q", "S", "S", "D").forEachIndexed { indice, nome ->
-                            val dia = inicioSemana.plusDays(indice.toLong())
-                            val concluido = dia.toString() in diasConcluidos
-                            Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(nome, style = TipografiaAplicativo.labelSmall, color = textoSecundario)
-                                Box(Modifier.fillMaxWidth().height(48.dp)
-                                    .clickable(enabled = pronto && !salvando && !dia.isAfter(hoje)) {
-                                        salvar { treinos = ApiAda.marcarTreino(perfilId, dia, !concluido) }
-                                    }.semantics { contentDescription = "${dia.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))}: ${if (concluido) "treino concluído, desmarcar" else "marcar treino concluído"}" },
-                                    contentAlignment = Alignment.Center) {
-                                    Box(Modifier.size(28.dp).clip(CircleShape).background(
-                                        if (concluido) verdePrincipal else if (dia == hoje) verdeClaro else fundoSecundario), contentAlignment = Alignment.Center) {
-                                        Text(if (concluido) "✓" else dia.dayOfMonth.toString(),
-                                            color = if (concluido) branco else if (dia.isAfter(hoje)) textoSecundario.copy(alpha = 0.4f) else textoSecundario,
-                                            style = TipografiaAplicativo.labelSmall)
+                    if (carregandoHabitos) LinearProgressIndicator(Modifier.fillMaxWidth(), color = verdePrincipal)
+                    if (erroHabitos) {
+                        Text("Não foi possível carregar água e passos desta semana.", color = vermelhoPrincipal, style = TipografiaAplicativo.bodySmall)
+                        TextButton(onClick = { tentativaHabitos++ }) { Text("Tentar novamente") }
+                    }
+                    BoxWithConstraints(Modifier.fillMaxWidth()) {
+                        val larguraTabela = maxOf(maxWidth, 350.dp)
+                        val tabelaRolavel = maxWidth < larguraTabela
+                        Column(Modifier.horizontalScroll(rememberScrollState())) {
+                            Column(Modifier.width(larguraTabela)) {
+                                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                    Spacer(Modifier.width(126.dp))
+                                    listOf("S", "T", "Q", "Q", "S", "S", "D").forEachIndexed { indice, nome ->
+                                        val dia = inicioSemana.plusDays(indice.toLong())
+                                        Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Box(Modifier.size(22.dp).clip(CircleShape).background(if (dia == hoje) verdePrincipal else transparente), contentAlignment = Alignment.Center) {
+                                                Text(nome, color = if (dia == hoje) branco else textoSecundario, style = TipografiaAplicativo.labelSmall)
+                                            }
+                                            Text(dia.dayOfMonth.toString(), color = textoSecundario, style = TipografiaAplicativo.labelSmall)
+                                        }
                                     }
                                 }
+                                LinhaHabitoSemanal("Beber água", "${litrosMeta(metas.aguaMl)} por dia", R.drawable.agua, azulPrincipal,
+                                    inicioSemana, hoje,
+                                    progressoDia = { dia ->
+                                        val quantidade = if (dia == hoje) aguaMl?.toLong() else habitosSemana?.firstOrNull { it.data == dia.toString() }?.aguaMl
+                                        quantidade?.let { it.toFloat() / metas.aguaMl.coerceAtLeast(1) }
+                                    })
+                                HorizontalDivider(color = borda)
+                                LinhaHabitoSemanal("Passos", "${numeroMeta(metas.passos)} por dia", R.drawable.sapato, verdePrincipal,
+                                    inicioSemana, hoje,
+                                    progressoDia = { dia ->
+                                        val quantidade = if (dia == hoje && passosHoje != null) passosHoje else habitosSemana?.firstOrNull { it.data == dia.toString() }?.passos
+                                        quantidade?.let { it.toFloat() / metas.passos.coerceAtLeast(1) }
+                                    })
+                                HorizontalDivider(color = borda)
+                                LinhaHabitoSemanal("Treinos", "${metas.treinosSemana}x por semana", R.drawable.treino, roxoPrincipal,
+                                    inicioSemana, hoje,
+                                    progressoDia = { dia -> if (treinos == null) null else if (dia.toString() in diasConcluidos) 1f else 0f },
+                                    aoClicarDia = if (pronto && !salvando) { dia ->
+                                        salvar { treinos = ApiAda.marcarTreino(perfilId, dia, dia.toString() !in diasConcluidos) }
+                                    } else null)
                             }
+                            if (tabelaRolavel) Text("Deslize para ver todos os dias →", color = textoSecundario, style = TipografiaAplicativo.labelSmall)
                         }
                     }
+                    Text("Água e passos são marcados ao atingir a meta diária atual. O círculo mostra o progresso; — indica falta de dados ou um dia futuro.",
+                        color = textoSecundario, style = TipografiaAplicativo.bodySmall)
                     Text(if (treinos == null) "Carregue os dados para acompanhar seus treinos."
-                        else "$treinosSemana de ${metas.treinosSemana} treinos concluídos. Toque em um dia para marcar ou desmarcar.",
+                        else "$treinosSemana de ${metas.treinosSemana} treinos concluídos. Toque na linha Treinos para marcar ou desmarcar um dia.",
                         color = textoSecundario, style = TipografiaAplicativo.bodySmall)
                     if (salvando) LinearProgressIndicator(Modifier.fillMaxWidth(), color = verdePrincipal)
                 }
@@ -270,6 +317,60 @@ fun TelaMetas(
             // Releitura evita duplicar o registro caso a atualização falhe.
             atualizacao++
         } })
+}
+
+@Composable
+private fun LinhaHabitoSemanal(
+    titulo: String,
+    detalhe: String,
+    icone: Int,
+    cor: Color,
+    inicio: LocalDate,
+    hoje: LocalDate,
+    progressoDia: (LocalDate) -> Float?,
+    aoClicarDia: ((LocalDate) -> Unit)? = null
+) {
+    Row(Modifier.fillMaxWidth().heightIn(min = 68.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.width(126.dp).padding(end = 6.dp), verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Box(Modifier.size(24.dp).clip(CircleShape).background(cor.copy(alpha = 0.12f)), contentAlignment = Alignment.Center) {
+                Image(painterResource(icone), null, Modifier.size(18.dp))
+            }
+            Column(Modifier.weight(1f)) {
+                Text(titulo, color = textoPrimario, style = TipografiaAplicativo.labelSmall, fontWeight = FontWeight.SemiBold)
+                Text(detalhe, color = textoSecundario, style = TipografiaAplicativo.labelSmall)
+            }
+        }
+        (0L..6L).forEach { indice ->
+            val dia = inicio.plusDays(indice)
+            val futuro = dia.isAfter(hoje)
+            val progresso = if (futuro) null else progressoDia(dia)?.coerceIn(0f, 1f)
+            val concluido = progresso != null && progresso >= 1f
+            val descricao = when {
+                futuro -> "dia futuro"
+                progresso == null -> "sem dados"
+                concluido -> "concluído"
+                else -> "${(progresso * 100).toInt()}% da meta"
+            }
+            Box(Modifier.weight(1f).height(56.dp)
+                .then(if (aoClicarDia != null && !futuro) Modifier.clickable(
+                    onClickLabel = if (concluido) "Desmarcar treino" else "Marcar treino concluído"
+                ) { aoClicarDia(dia) } else Modifier)
+                .semantics { contentDescription = "$titulo, ${dia.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))}: $descricao" },
+                contentAlignment = Alignment.Center) {
+                if (concluido) {
+                    Box(Modifier.size(20.dp).clip(CircleShape).background(verdePrincipal), contentAlignment = Alignment.Center) {
+                        Text("✓", color = branco, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
+                } else if (progresso != null) {
+                    CircularProgressIndicator(progress = { progresso }, modifier = Modifier.size(20.dp),
+                        color = verdePrincipal, trackColor = borda, strokeWidth = 3.dp)
+                } else {
+                    Text("—", color = if (futuro) borda else textoSecundario, style = TipografiaAplicativo.labelSmall)
+                }
+            }
+        }
+    }
 }
 
 @Composable

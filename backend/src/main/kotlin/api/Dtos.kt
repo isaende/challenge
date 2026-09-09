@@ -15,7 +15,12 @@ import model.AdaResumo
 @Serializable data class AguaRequest(val quantidadeMl:Int)
 @Serializable data class ResumoRequest(val dataResumo:String,val passos:Long,val sonoMinutos:Long,val batimentosUltimos:Int?=null)
 @Serializable data class ExameRequest(val nome:String,val data:String,val tipoMime:String,val nomeArquivo:String,val arquivoBase64:String)
-@Serializable data class DadosPerfilResponse(val auth:AuthResponse,val metas:List<AdaMetas>)
+@Serializable data class DadosPerfilResponse(
+    val auth: AuthResponse,
+    val metas: List<AdaMetas>,
+    val perfil: model.AdaPerfil,
+    val medidas: model.AdaMedidas?
+)
 @Serializable data class AguaResponse(val registros:List<AdaAgua>,val totalMl:Int)
 @Serializable data class ExamesResponse(val exames:List<AdaExames>)
 @Serializable data class ResumoResponse(val resumo:AdaResumo)
