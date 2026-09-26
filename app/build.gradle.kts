@@ -1,6 +1,5 @@
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
     id("org.jetbrains.kotlin.plugin.serialization")
 }
@@ -9,12 +8,12 @@ val imagensDrawableGeradas = layout.buildDirectory.dir("generated/res/images/mai
 val sincronizarImagensDrawable by tasks.registering(Sync::class) {
     from("src/images") {
         include("**/*.png", "**/*.jpg", "**/*.jpeg", "**/*.webp")
-        exclude("logo.png")
         exclude("cadastro/**")
         exclude { detalhe -> detalhe.file.length() == 0L }
         eachFile {
             // O calendário do perfil é diferente do usado no cadastro.
-            path = if (file.name == "agenda.png" && file.parentFile.name == "icones") "agenda_perfil.png"
+            path = if (file.name == "logo.png") "logo_app.png"
+                else if (file.name == "agenda.png" && file.parentFile.name == "icones") "agenda_perfil.png"
                 else name.lowercase().replace("-", "_")
         }
         includeEmptyDirs = false
@@ -52,8 +51,8 @@ android {
     sourceSets {
         getByName("main") {
             manifest.srcFile("src/AndroidManifest.xml")
-            res.srcDirs("src/res", imagensDrawableGeradas)
-            java.srcDirs("src/chat_medico", "src/telas")
+            res.directories.addAll(listOf("src/res", imagensDrawableGeradas.path))
+            kotlin.directories.addAll(listOf("src/chat_medico", "src/telas"))
         }
     }
 
@@ -62,9 +61,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
 }
 
 tasks.named("preBuild") {
@@ -72,6 +68,7 @@ tasks.named("preBuild") {
 }
 
 dependencies {
+    testImplementation("junit:junit:4.13.2")
     val pacoteCompose = platform("androidx.compose:compose-bom:2024.12.01")
     implementation(pacoteCompose)
 

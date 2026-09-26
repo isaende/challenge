@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -167,15 +166,7 @@ fun TelaTreino(
 @Composable
 private fun CabecalhoTreino(aoVoltar: () -> Unit) {
     Box(Modifier.fillMaxWidth().statusBarsPadding().height(58.dp)) {
-        Surface(
-            modifier = Modifier.size(38.dp).align(Alignment.CenterStart).clickable(onClick = aoVoltar),
-            shape = CircleShape,
-            color = verdeClaro
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Text("‹", color = verdePrincipal, fontSize = 32.sp, lineHeight = 32.sp)
-            }
-        }
+        BotaoSetaAplicativo(aoClicar = aoVoltar, modifier = Modifier.align(Alignment.CenterStart))
         Text(
             text = "TREINOS PERSONALIZADOS",
             modifier = Modifier.align(Alignment.Center),

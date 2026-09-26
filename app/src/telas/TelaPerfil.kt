@@ -1,13 +1,11 @@
 package home_page
 
-import android.content.Context
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -20,9 +18,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -44,6 +40,7 @@ fun TelaPerfil(
     aoAbrirMonitorar: () -> Unit,
     aoAbrirExames: () -> Unit,
     aoAdicionar: () -> Unit,
+    aoAbrirPerfilAdaptativo: () -> Unit,
     aoPerfilCarregado: (SessaoUsuario) -> Unit,
     aoSair: () -> Unit,
     modifier: Modifier = Modifier
@@ -54,13 +51,6 @@ fun TelaPerfil(
     var tentativa by remember(perfilId) { mutableIntStateOf(0) }
     var mostrarConta by rememberSaveable(perfilId) { mutableStateOf(false) }
     val aoCarregarAtual by rememberUpdatedState(aoPerfilCarregado)
-    val contexto = LocalContext.current
-    val preferencias = remember(contexto, perfilId) {
-        contexto.getSharedPreferences("preferencias_perfil_$perfilId", Context.MODE_PRIVATE)
-    }
-    var adaptativo by remember(perfilId) {
-        mutableStateOf(preferencias.getBoolean("adaptativo", true))
-    }
 
     BackHandler(onBack = aoVoltar)
     LaunchedEffect(perfilId, tentativa) {
@@ -116,9 +106,7 @@ fun TelaPerfil(
                     .statusBarsPadding().padding(horizontal = 8.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = aoVoltar, modifier = Modifier.semantics { contentDescription = "Voltar" }) {
-                    Text("‹", color = branco, fontSize = 36.sp, lineHeight = 38.sp)
-                }
+                BotaoSetaAplicativo(aoClicar = aoVoltar)
                 Text(
                     "Meu Perfil", modifier = Modifier.weight(1f), textAlign = TextAlign.Center,
                     color = branco, fontSize = 22.sp, fontWeight = FontWeight.SemiBold
@@ -150,10 +138,7 @@ fun TelaPerfil(
                     }
                 }
                 else -> dados?.let { perfil ->
-                    ConteudoPerfil(perfil, adaptativo) { ativo ->
-                        preferencias.edit().putBoolean("adaptativo", ativo).apply()
-                        adaptativo = ativo
-                    }
+                    ConteudoPerfil(perfil, aoAbrirPerfilAdaptativo)
                 }
             }
         }
@@ -177,7 +162,7 @@ fun TelaPerfil(
 }
 
 @Composable
-private fun ConteudoPerfil(dados: DadosPerfilApi, adaptativo: Boolean, aoMudarAdaptativo: (Boolean) -> Unit) {
+private fun ConteudoPerfil(dados: DadosPerfilApi, aoAbrirPerfilAdaptativo: () -> Unit) {
     val perfil = dados.perfil
     val localidade = Locale.forLanguageTag("pt-BR")
     val idade = runCatching {
@@ -240,25 +225,22 @@ private fun ConteudoPerfil(dados: DadosPerfilApi, adaptativo: Boolean, aoMudarAd
             InformacaoPerfil("Objetivo", perfil.objetivoPrincipal.ifBlank { "Não informado" }, R.drawable.metas)
         }
         Surface(
+            onClick = aoAbrirPerfilAdaptativo,
             modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(22.dp), color = branco
         ) {
             Row(
-                Modifier.toggleable(value = adaptativo, role = Role.Switch, onValueChange = aoMudarAdaptativo).padding(18.dp),
+                Modifier.padding(18.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
                     Text("Perfil adaptativo", color = verdePrincipal, style = TipografiaAplicativo.titleMedium)
                     Text(
-                        "Preferência por recomendações personalizadas com base no seu perfil e objetivos.",
+                        "Acesse o Modo Sênior e os atalhos para cuidar da sua saúde.",
                         color = textoSecundario, style = TipografiaAplicativo.bodySmall
                     )
                 }
-                Switch(
-                    checked = adaptativo, onCheckedChange = null,
-                    colors = SwitchDefaults.colors(checkedThumbColor = branco, checkedTrackColor = verdeEscuro,
-                        uncheckedThumbColor = textoSecundario, uncheckedTrackColor = fundoSecundario)
-                )
+                SetaAplicativo()
             }
         }
     }

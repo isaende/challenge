@@ -65,6 +65,8 @@ private data class RegistroAgua(val horario: String, val quantidadeMl: Int)
 
 @Composable
 fun TelaHidratacao(aoVoltar: () -> Unit, perfilId: Long, metaDiariaMl: Int, modifier: Modifier = Modifier) {
+    val contexto = LocalContext.current
+    var carregando by remember { mutableStateOf(true) }
     val escopo = rememberCoroutineScope()
     var registros by remember { mutableStateOf(emptyList<RegistroAgua>()) }
     var dataDosRegistros by remember { mutableStateOf(LocalDate.now()) }
@@ -73,7 +75,7 @@ fun TelaHidratacao(aoVoltar: () -> Unit, perfilId: Long, metaDiariaMl: Int, modi
     val progresso = (totalMl.toFloat() / metaDiariaMl.coerceAtLeast(1)).coerceIn(0f, 1f)
 
     fun adicionarAgua(quantidadeMl: Int) {
-        if (quantidadeMl <= 0) return
+        if (quantidadeMl !in 1..10_000 || carregando) return
         val hoje = LocalDate.now()
         val novoRegistro = RegistroAgua(
             LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")),
@@ -83,16 +85,21 @@ fun TelaHidratacao(aoVoltar: () -> Unit, perfilId: Long, metaDiariaMl: Int, modi
             runCatching { ApiAda.adicionarAgua(perfilId, quantidadeMl) }.onSuccess {
                 registros = if (dataDosRegistros == hoje) registros + novoRegistro else listOf(novoRegistro)
                 dataDosRegistros = hoje
+            }.onFailure {
+                android.widget.Toast.makeText(contexto, "Não foi possível registrar a água. Tente novamente.", android.widget.Toast.LENGTH_LONG).show()
             }
         }
     }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(perfilId) {
         runCatching { ApiAda.listarAgua(perfilId) }.onSuccess { resposta ->
             registros = resposta.registros.map { item ->
                 RegistroAgua(item.consumidoEm?.substringAfter('T')?.take(5) ?: "--:--", item.quantidadeMl)
             }
+        }.onFailure {
+            android.widget.Toast.makeText(contexto, "Não foi possível carregar o histórico de água.", android.widget.Toast.LENGTH_LONG).show()
         }
+        carregando = false
         while (true) {
             delay(30_000)
             val hoje = LocalDate.now()
@@ -152,15 +159,7 @@ private fun CabecalhoHidratacao(aoVoltar: () -> Unit) {
             .statusBarsPadding()
             .height(58.dp)
     ) {
-        Surface(
-            modifier = Modifier.size(38.dp).align(Alignment.CenterStart).clickable(onClick = aoVoltar),
-            shape = CircleShape,
-            color = verdeClaro
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Text("‹", color = verdePrincipal, fontSize = 32.sp, lineHeight = 32.sp)
-            }
-        }
+        BotaoSetaAplicativo(aoClicar = aoVoltar, modifier = Modifier.align(Alignment.CenterStart))
         Text(
             "HIDRATAÇÃO",
             modifier = Modifier.align(Alignment.Center),
@@ -293,7 +292,7 @@ private fun DialogoValorManual(aoFechar: () -> Unit, aoAdicionar: (Int) -> Unit)
             )
         },
         confirmButton = {
-            Button(onClick = { valor?.let(aoAdicionar) }, enabled = valor != null && valor > 0, colors = ButtonDefaults.buttonColors(containerColor = verdePrincipal)) {
+            Button(onClick = { valor?.let(aoAdicionar) }, enabled = valor != null && valor in 1..10_000, colors = ButtonDefaults.buttonColors(containerColor = verdePrincipal)) {
                 Text("Adicionar")
             }
         },

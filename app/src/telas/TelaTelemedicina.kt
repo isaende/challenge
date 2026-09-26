@@ -17,19 +17,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -91,16 +88,7 @@ private fun CabecalhoTelemedicina(aoVoltar: () -> Unit) {
             .height(86.dp)
             .padding(horizontal = 16.dp)
     ) {
-        IconButton(
-            onClick = aoVoltar,
-            modifier = Modifier
-                .size(42.dp)
-                .align(Alignment.CenterStart)
-                .clip(CircleShape)
-                .background(verdeClaro)
-        ) {
-            Text("<", color = verdeEscuro, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-        }
+        BotaoSetaAplicativo(aoClicar = aoVoltar, modifier = Modifier.align(Alignment.CenterStart))
         Column(
             modifier = Modifier.align(Alignment.Center),
             horizontalAlignment = Alignment.CenterHorizontally

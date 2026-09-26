@@ -5,16 +5,7 @@ import factory.ConnectionFactory
 // passa para analisar se a IA pode responder a pergunta, 
 // primeiro classifica se é caso de urgencia, se ele deve recusar ou der algum erro
 
-import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.plugins.HttpTimeout
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation as ContentNegotiationCliente
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.call
@@ -28,22 +19,19 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
 import java.text.Normalizer
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
-// aponta para o servidor ollama que roda o modelo de IA
-private const val MODELO_OLLAMA = "medgemma1.5:4b"
-private const val URL_OLLAMA = "http://localhost:11434/api/chat"
+private val clienteOpenAI = ClienteOpenAI()
 private const val LIMITE_MENSAGEM = 2000
 private const val RESPOSTA_URGENCIA = "Atenção: pelos sinais descritos, procure atendimento de urgência imediatamente ou acione o serviço de emergência local. Esta resposta não substitui avaliação médica."
 private const val RESPOSTA_RECUSA = "Não posso diagnosticar, prescrever medicamentos, indicar dose ou orientar mudança de tratamento. Posso explicar informações gerais, mas para uma orientação segura procure um profissional de saúde."
 private const val RESPOSTA_ERRO = "Não foi possível responder agora. Tente novamente."
 
 fun main() {
-    runCatching { ConnectionFactory.testarConexao() }
+    runCatching { ConnectionFactory.testarConexao(); factory.SchemaMigration.atualizar() }
         .onSuccess { println("Conexao com o Oracle realizada com sucesso.") }
-        .onFailure { println("Aviso: Oracle indisponivel no inicio: ${it.message}") }
+        .onFailure { println("Aviso: falha ao conectar ou atualizar o schema do Oracle: ${it.message}") }
     embeddedServer(Netty, host = "0.0.0.0", port = System.getenv("PORT")?.toIntOrNull() ?: 8080) {
         modulo()
     }.start(wait = true)
@@ -51,7 +39,7 @@ fun main() {
 
 fun Application.modulo() {
     install(ContentNegotiation) {
-        json(Json { ignoreUnknownKeys = true })
+        json(Json { ignoreUnknownKeys = true; encodeDefaults = true })
     }
     install(StatusPages) {
         exception<Throwable> { call, erro ->
@@ -73,7 +61,7 @@ fun Application.modulo() {
                 mensagem.temUrgencia() -> call.respond(RespostaChat(RESPOSTA_URGENCIA, "urgencia"))
                 mensagem.deveRecusar() -> call.respond(RespostaChat(RESPOSTA_RECUSA, "recusa_segura"))
                 else -> {
-                    val resposta = runCatching { ClienteOllama.responder(mensagem) }.getOrDefault("")
+                    val resposta = runCatching { clienteOpenAI.responder(mensagem, pedido.imagemBase64) }.getOrDefault("")
                     call.respond(
                         if (resposta.isBlank()) RespostaChat(RESPOSTA_ERRO, "erro")
                         else RespostaChat(resposta, "educativo")
@@ -85,72 +73,10 @@ fun Application.modulo() {
 }
 
 @Serializable
-data class PedidoChat(val mensagem: String)
+data class PedidoChat(val mensagem: String, val imagemBase64: String? = null)
 
 @Serializable
 data class RespostaChat(val resposta: String, val tipo: String)
-
-private object ClienteOllama {
-    private val cliente = HttpClient(CIO) {
-        expectSuccess = true
-        install(ContentNegotiationCliente) {
-            json(Json { ignoreUnknownKeys = true })
-        }
-        install(HttpTimeout) {
-            connectTimeoutMillis = 10_000
-            requestTimeoutMillis = 180_000
-            socketTimeoutMillis = 180_000
-        }
-    }
-
-    suspend fun responder(mensagem: String): String {
-        val resposta = cliente.post(System.getenv("OLLAMA_CHAT_URL") ?: URL_OLLAMA) {
-            contentType(ContentType.Application.Json)
-            setBody(
-                PedidoOllama(
-                    modelo = System.getenv("OLLAMA_MODEL") ?: MODELO_OLLAMA,
-                    transmitirFluxo = false,
-                    mensagens = listOf(
-                        MensagemOllama("system", PROMPT_MEDICO),
-                        MensagemOllama("user", mensagem)
-                    ),
-                    opcoes = OpcoesOllama(0.2)
-                )
-            )
-        }.body<RespostaOllama>()
-        return resposta.mensagem?.conteudo.orEmpty().somenteRespostaFinal()
-    }
-}
-
-private fun String.somenteRespostaFinal(): String {
-    return substringAfterLast("<unused95>", this)
-        .replace("<unused\\d+>".toRegex(), "")
-        .trim()
-}
-
-@Serializable
-private data class PedidoOllama(
-    @SerialName("model") val modelo: String,
-    @SerialName("stream") val transmitirFluxo: Boolean,
-    @SerialName("messages") val mensagens: List<MensagemOllama>,
-    @SerialName("options") val opcoes: OpcoesOllama
-)
-
-@Serializable
-private data class MensagemOllama(
-    @SerialName("role") val papel: String,
-    @SerialName("content") val conteudo: String
-)
-
-@Serializable
-private data class OpcoesOllama(
-    @SerialName("temperature") val temperatura: Double
-)
-
-@Serializable
-private data class RespostaOllama(
-    @SerialName("message") val mensagem: MensagemOllama? = null
-)
 
 private fun String.temUrgencia(): Boolean {
     val texto = normalizado()
@@ -210,8 +136,9 @@ private fun String.normalizado(): String {
         .trim()
 }
 
-private const val PROMPT_MEDICO = """
-Você é um assistente de educação em saúde.
+internal const val PROMPT_MEDICO = """
+Você é Ada, uma assistente de educação em saúde. Responda de forma clara e objetiva, com no máximo 120 palavras.
+Ao receber uma imagem de exame, explique apenas o que estiver legível, sem concluir diagnósticos. Avise quando a qualidade impedir uma leitura confiável.
 
 Responda dúvidas gerais sobre saúde em português do Brasil, explique termos médicos de forma simples e sempre deixe claro que a resposta não substitui avaliação médica.
 

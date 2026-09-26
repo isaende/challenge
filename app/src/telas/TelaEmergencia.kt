@@ -29,14 +29,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -114,15 +112,7 @@ private fun CabecalhoEmergencia(aoVoltarInicio: () -> Unit) {
             .padding(top = 8.dp, bottom = 2.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(
-            onClick = aoVoltarInicio,
-            modifier = Modifier
-                .size(38.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(branco)
-        ) {
-            Text("<", color = textoPrimario, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-        }
+        BotaoSetaAplicativo(aoClicar = aoVoltarInicio, descricao = "Voltar ao início")
         Text(
             "Emergência",
             color = verdeEscuro,
@@ -130,7 +120,7 @@ private fun CabecalhoEmergencia(aoVoltarInicio: () -> Unit) {
             textAlign = TextAlign.Center,
             modifier = Modifier.weight(1f)
         )
-        Spacer(Modifier.width(38.dp))
+        Spacer(Modifier.width(48.dp))
     }
 }
 
@@ -287,7 +277,7 @@ private fun BotaoLinkEmergencia(
                 Text(titulo, color = textoPrimario, style = TipografiaAplicativo.titleSmall)
                 Text(subtitulo, color = textoSecundario, style = TipografiaAplicativo.bodySmall)
             }
-            Text(">", color = verdePrincipal, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+            SetaAplicativo()
         }
     }
 }

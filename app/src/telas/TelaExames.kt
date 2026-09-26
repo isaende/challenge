@@ -36,7 +36,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -51,7 +50,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
@@ -98,6 +96,7 @@ fun TelaExames(
 ) {
     val contexto = LocalContext.current
     val escopo = rememberCoroutineScope()
+    var salvandoExame by remember { mutableStateOf(false) }
     var exames by remember { mutableStateOf(emptyList<ExameEnviado>()) }
     var exameSelecionado by remember { mutableStateOf<ExameEnviado?>(null) }
     var arquivoEscolhido by remember { mutableStateOf<Uri?>(null) }
@@ -109,6 +108,7 @@ fun TelaExames(
 
     LaunchedEffect(perfilId) {
         exames = runCatching { ApiAda.listarExames(perfilId).map { exame -> exame.paraTela().copy(caminhoCopia=runCatching { ApiAda.baixarExame(contexto,perfilId,exame) }.getOrDefault("")) } }
+            .onFailure { android.widget.Toast.makeText(contexto, "Não foi possível carregar os exames.", android.widget.Toast.LENGTH_LONG).show() }
             .getOrDefault(emptyList())
     }
 
@@ -250,8 +250,9 @@ fun TelaExames(
             data = dataDigitada,
             aoMudarNome = { nomeDigitado = it },
             aoMudarData = { dataDigitada = it },
-            aoCancelar = { arquivoEscolhido = null },
+            aoCancelar = { if (!salvandoExame) arquivoEscolhido = null },
             aoSalvar = {
+                if (salvandoExame) return@DialogoSalvarExame
                 val enderecoArquivo = arquivoEscolhido ?: return@DialogoSalvarExame
                 val codigo = UUID.randomUUID().toString()
                 val caminhoCopia = salvarCopiaExame(
@@ -260,18 +261,20 @@ fun TelaExames(
                     codigo = codigo,
                     nomeArquivo = nomeArquivoEscolhido
                 )
+                salvandoExame = true
                 escopo.launch {
                     val dataIso=runCatching { LocalDate.parse(dataDigitada,FormatoDataExame).toString() }.getOrDefault(LocalDate.now().toString())
                     runCatching { ApiAda.enviarExame(contexto,perfilId,nomeDigitado.ifBlank { "Exame sem nome" },dataIso,tipoArquivoEscolhido.ifBlank { "application/octet-stream" },nomeArquivoEscolhido.ifBlank { "arquivo" },enderecoArquivo) }
-                        .onSuccess { salvo -> exames=listOf(salvo.paraTela().copy(enderecoOriginal=enderecoArquivo.toString(),caminhoCopia=caminhoCopia))+exames }
+                        .onSuccess { salvo -> exames=listOf(salvo.paraTela().copy(enderecoOriginal=enderecoArquivo.toString(),caminhoCopia=caminhoCopia))+exames; arquivoEscolhido = null }
+                        .onFailure { android.widget.Toast.makeText(contexto, "Não foi possível salvar o exame. Tente novamente.", android.widget.Toast.LENGTH_LONG).show() }
+                    salvandoExame = false
                 }
-                arquivoEscolhido = null
             }
         )
     }
 }
 
-// parte de cima da tela, alterar "dona maria" para o nome usuario que estiver no banco de dados
+// parte de cima da tela
 @Composable
 private fun CabecalhoExames(
     aoVoltarInicio: () -> Unit
@@ -282,23 +285,15 @@ private fun CabecalhoExames(
             .padding(top = 10.dp, bottom = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(
-            onClick = aoVoltarInicio,
-            modifier = Modifier
-                .size(42.dp)
-                .clip(CircleShape)
-                .background(verdeClaro)
-        ) {
-            Text("<", color = verdePrincipal, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-        }
+        BotaoSetaAplicativo(aoClicar = aoVoltarInicio, descricao = "Voltar ao início")
         Column(
             modifier = Modifier.weight(1f),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text("Meus Exames", color = verdeEscuro, style = TipografiaAplicativo.titleLarge)
-            Text("Dona Maria, acompanhe seus resultados.", color = textoSecundario, style = TipografiaAplicativo.bodySmall)
+            Text("Acompanhe seus resultados.", color = textoSecundario, style = TipografiaAplicativo.bodySmall)
         }
-        Spacer(Modifier.size(42.dp))
+        Spacer(Modifier.size(48.dp))
     }
 }
 
@@ -432,7 +427,7 @@ private fun LinhaExame(
                 style = TipografiaAplicativo.labelSmall
             )
         }
-        Text(">", color = textoPrimario, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+        SetaAplicativo()
     }
     Box(
         modifier = Modifier
@@ -531,15 +526,7 @@ private fun TelaDetalheExame(
                 .padding(18.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(
-                    onClick = aoVoltar,
-                    modifier = Modifier
-                        .size(42.dp)
-                        .clip(CircleShape)
-                        .background(verdeClaro)
-                ) {
-                    Text("<", color = verdePrincipal, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                }
+                BotaoSetaAplicativo(aoClicar = aoVoltar)
                 Spacer(Modifier.width(12.dp))
                 Column {
                     Text("Resultado do exame", color = verdeEscuro, style = TipografiaAplicativo.titleLarge)
@@ -607,7 +594,7 @@ private fun CartaoAjudaExames() {
                 Text("Precisa de ajuda?", color = verdePrincipal, style = TipografiaAplicativo.titleSmall)
                 Text("Nossa equipe esta pronta para te ajudar.", color = textoSecundario, style = TipografiaAplicativo.bodySmall)
             }
-            Text(">", color = textoPrimario, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+            SetaAplicativo()
         }
     }
 }

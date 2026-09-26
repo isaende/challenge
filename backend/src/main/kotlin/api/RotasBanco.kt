@@ -30,6 +30,17 @@ fun Route.rotasBanco() {
     val agendaDAO=AdaAgendaDAO(); val dosesDAO=AdaDosesDAO(); val examesDAO=AdaExamesDAO()
     val treinosDAO = AdaTreinosDAO()
 
+    get("/api/perfis/{perfilId}/desafios") { executar(call) {
+        val id = perfilId(call)
+        val resumos = resumoDAO.listarPorPerfil(id)
+        mapOf(
+            "HIDRATACAO" to aguaDAO.diasComMeta(id),
+            "EXERCICIOS" to treinosDAO.listarPorPerfil(id).filter { it.concluidoEm != null }.map { it.dataTreino }.distinct(),
+            "CAMINHADA" to resumos.filter { (it.passos ?: 0) >= 10_000 }.map { it.dataResumo },
+            "SONO" to resumos.filter { (it.sonoMinutos ?: 0) >= 420 }.map { it.dataResumo }
+        )
+    } }
+
     get("/api/perfis/{perfilId}/habitos") { executar(call) {
         val inicio = try {
             LocalDate.parse(call.request.queryParameters["inicio"] ?: LocalDate.now().toString())
@@ -64,7 +75,17 @@ fun Route.rotasBanco() {
     } }
     get("/api/perfis/{perfilId}/agua") { executar(call) { val itens=aguaDAO.listarPorPerfilEData(perfilId(call),call.request.queryParameters["data"]?:LocalDate.now().toString());AguaResponse(itens,itens.sumOf(AdaAgua::quantidadeMl)) } }
     post("/api/perfis/{perfilId}/agua") { executar(call,HttpStatusCode.Created) { val req=call.receive<AguaRequest>();require(req.quantidadeMl in 1..10_000){"Quantidade de agua invalida"};aguaDAO.inserir(AdaAgua(quantidadeMl=req.quantidadeMl,perfilId=perfilId(call))) } }
-    post("/api/perfis/{perfilId}/resumos") { executar(call) { val req=call.receive<ResumoRequest>();ResumoResponse(resumoDAO.salvar(AdaResumo(dataResumo=req.dataResumo,passos=req.passos,sonoMinutos=req.sonoMinutos,batimentosUltimos=req.batimentosUltimos,perfilId=perfilId(call)))) } }
+    get("/api/perfis/{perfilId}/resumos") { executar(call) {
+        resumoDAO.listarPorPerfil(perfilId(call))
+    } }
+    post("/api/perfis/{perfilId}/resumos") { executar(call) {
+        val req = call.receive<ResumoRequest>()
+        ResumoResponse(resumoDAO.salvar(AdaResumo(
+            dataResumo = req.dataResumo, passos = req.passos, sonoMinutos = req.sonoMinutos,
+            batimentosUltimos = req.batimentosUltimos, perfilId = perfilId(call),
+            pressaoSistolica = req.pressaoSistolica, pressaoDiastolica = req.pressaoDiastolica
+        )))
+    } }
     get("/api/perfis/{perfilId}/medicamentos") { executar(call) { medicamentosDAO.listarPorPerfil(perfilId(call)).map { med -> val agenda=agendaDAO.buscarPorMedicamento(med.id).firstOrNull();val dose=agenda?.let{dosesDAO.listarPorAgenda(it.id).firstOrNull{d->d.tomadaEm?.startsWith(LocalDate.now().toString())==true}};MedicamentoResponse(med.id,med.nomeMedicamento,med.dosagemTexto,agenda?.horarioLocal?:"08:00",agenda?.lembrete?:false,dose?.tomadaEm) } } }
     post("/api/perfis/{perfilId}/medicamentos") { executar(call,HttpStatusCode.Created) { val req=call.receive<MedicamentoRequest>();ConnectionFactory.transaction { con -> val med=medicamentosDAO.inserir(AdaMedicamentos(nomeMedicamento=req.nome,dosagemTexto=req.dosagem,inicio=LocalDate.now().toString(),perfilId=perfilId(call)),con);val agenda=agendaDAO.inserir(AdaAgenda(horarioLocal=req.horario,lembrete=req.alarmeAtivo,medicamentoId=med.id),con);MedicamentoResponse(med.id,med.nomeMedicamento,med.dosagemTexto,agenda.horarioLocal,agenda.lembrete) } } }
     patch("/api/perfis/{perfilId}/medicamentos/{medicamentoId}/tomada") { executar(call) { val medId=call.parameters["medicamentoId"]?.toLongOrNull()?:error("Medicamento invalido");val agenda=agendaDAO.buscarPorMedicamento(medId).firstOrNull()?:error("Agenda nao encontrada");dosesDAO.inserir(AdaDoses(previsao=LocalDateTime.now().toString(),tomadaEm=LocalDateTime.now().toString(),status="TOMADA",agendaId=agenda.id)) } }

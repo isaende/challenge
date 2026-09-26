@@ -13,7 +13,14 @@ import model.AdaResumo
 @Serializable data class MedicamentoRequest(val nome:String,val dosagem:String,val horario:String,val alarmeAtivo:Boolean=true)
 @Serializable data class MedicamentoResponse(val id:Long,val nome:String,val dosagem:String,val horario:String,val alarmeAtivo:Boolean,val tomadoEm:String?=null)
 @Serializable data class AguaRequest(val quantidadeMl:Int)
-@Serializable data class ResumoRequest(val dataResumo:String,val passos:Long,val sonoMinutos:Long,val batimentosUltimos:Int?=null)
+@Serializable data class ResumoRequest(
+    val dataResumo: String,
+    val passos: Long?,
+    val sonoMinutos: Long?,
+    val batimentosUltimos: Int? = null,
+    val pressaoSistolica: Double? = null,
+    val pressaoDiastolica: Double? = null
+)
 @Serializable data class ExameRequest(val nome:String,val data:String,val tipoMime:String,val nomeArquivo:String,val arquivoBase64:String)
 @Serializable data class DadosPerfilResponse(
     val auth: AuthResponse,

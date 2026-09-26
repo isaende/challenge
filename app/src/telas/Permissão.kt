@@ -13,7 +13,7 @@ class Permissão : Activity() {
         super.onCreate(savedInstanceState)
 
         val texto = TextView(this).apply {
-            text = "A Ada usa dados do Health Connect apenas para mostrar seu resumo de saude, como passos, sono e batimentos cardíacos. Esses dados não substituem avaliação médica e só são lidos quando voce concede permissão."
+            text = "A Ada lê passos, sono, frequência cardíaca e pressão arterial do Health Connect com sua permissão para exibir e salvar seu monitoramento no aplicativo. As calorias são estimadas a partir dos passos. Esses dados não substituem avaliação médica."
             textSize = 18f
             setPadding(48, 48, 48, 48)
             gravity = Gravity.START

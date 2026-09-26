@@ -23,6 +23,7 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.5.12")
     implementation("com.oracle.database.jdbc:ojdbc11:23.26.3.0.0")
     testImplementation(kotlin("test"))
+    testImplementation("io.ktor:ktor-client-mock-jvm:3.0.3")
 }
 
 tasks.test {

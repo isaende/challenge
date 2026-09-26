@@ -40,7 +40,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -56,7 +55,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
@@ -114,29 +112,34 @@ fun TelaMedicamentos(
     val repositorio = remember(perfilId) { RepositorioMedicamentos(perfilId) }
     val escopo = rememberCoroutineScope()
     var medicamentos by remember { mutableStateOf(emptyList<MedicamentoSalvo>()) }
+    var salvando by remember { mutableStateOf(false) }
     var exibindoFormulario by remember { mutableStateOf(false) }
     val pedirPermissaoNotificacao = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) {}
 
     LaunchedEffect(perfilId) {
-        medicamentos = runCatching { repositorio.listar() }.getOrDefault(emptyList())
+        medicamentos = runCatching { repositorio.listar() }.onFailure { android.widget.Toast.makeText(contexto, "Não foi possível carregar os medicamentos.", android.widget.Toast.LENGTH_LONG).show() }.getOrDefault(emptyList())
+        medicamentos.filter { it.alarmeAtivo }.forEach { agendarLembreteMedicamento(contexto, it) }
     }
 
     if (exibindoFormulario) {
         TelaAdicionarMedicamento(
-            aoVoltar = { exibindoFormulario = false },
+            aoVoltar = { if (!salvando) exibindoFormulario = false },
+            salvando = salvando,
             aoSalvar = { nome, dosagem, horario, alarmeAtivo ->
                 if (alarmeAtivo) {
                     pedirPermissaoNotificacaoMedicamento(contexto, pedirPermissaoNotificacao::launch)
                 }
+                salvando = true
                 escopo.launch {
                     runCatching { repositorio.adicionar(nome.ifBlank { "Medicamento" },dosagem.ifBlank { "Dosagem nao informada" },horario.ifBlank { "08:00" },alarmeAtivo) }
                         .onSuccess { novoMedicamento ->
                             medicamentos = (medicamentos + novoMedicamento).sortedBy { minutosDoDia(it.horario) }
                             if (alarmeAtivo) agendarLembreteMedicamento(contexto, novoMedicamento)
                             exibindoFormulario = false
-                        }
+                        }.onFailure { android.widget.Toast.makeText(contexto, "Não foi possível salvar o medicamento. Tente novamente.", android.widget.Toast.LENGTH_LONG).show() }
+                    salvando = false
                 }
             }
         )
@@ -250,23 +253,14 @@ private fun CabecalhoMedicamentos(aoVoltarInicio: () -> Unit) {
                 .padding(top = 8.dp, bottom = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(
-                onClick = aoVoltarInicio,
-                modifier = Modifier
-                    .size(38.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(branco)
-            ) {
-                Text("<", color = verdePrincipal, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-            }
+            BotaoSetaAplicativo(aoClicar = aoVoltarInicio, descricao = "Voltar ao início")
             Column(
                 modifier = Modifier.weight(1f),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text("Medicamentos", color = verdeEscuro, style = TipografiaAplicativo.titleLarge)
-                Text("Dona Maria", color = textoSecundario, style = TipografiaAplicativo.bodySmall)
             }
-            Spacer(Modifier.size(38.dp))
+            Spacer(Modifier.size(48.dp))
         }
     }
 }
@@ -405,7 +399,7 @@ private fun LinhaMedicamento(medicamento: MedicamentoSalvo) {
                 overflow = TextOverflow.Ellipsis
             )
         }
-        Text(">", color = textoPrimario, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+        SetaAplicativo()
     }
 }
 
@@ -447,7 +441,7 @@ private fun DivisorMedicamentos() {
 @Composable
 private fun CartaoDicaMedicamentos() {
     BalaoDicaAda(
-        titulo = "Dica da Ada para Dona Maria",
+        titulo = "Dica da Ada",
         texto = "Tome seus medicamentos sempre nos horários certos e cuide da sua saúde!"
     )
 }
@@ -455,7 +449,8 @@ private fun CartaoDicaMedicamentos() {
 @Composable
 private fun TelaAdicionarMedicamento(
     aoVoltar: () -> Unit,
-    aoSalvar: (String, String, String, Boolean) -> Unit
+    aoSalvar: (String, String, String, Boolean) -> Unit,
+    salvando: Boolean = false
 ) {
     var nome by remember { mutableStateOf("") }
     var dosagem by remember { mutableStateOf("") }
@@ -475,15 +470,7 @@ private fun TelaAdicionarMedicamento(
                 .padding(18.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(
-                    onClick = aoVoltar,
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(branco)
-                ) {
-                    Text("<", color = verdePrincipal, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                }
+                BotaoSetaAplicativo(aoClicar = aoVoltar)
                 Spacer(Modifier.width(12.dp))
                 Column {
                     Text("Adicionar medicamento", color = verdeEscuro, style = TipografiaAplicativo.titleLarge)
@@ -549,7 +536,7 @@ private fun TelaAdicionarMedicamento(
                                 !horarioValido(horario) -> "Informe o horario no formato HH:mm."
                                 else -> ""
                             }
-                            if (erro.isBlank()) aoSalvar(nome.trim(), dosagem.trim(), horario.trim(), alarmeAtivo)
+                            if (erro.isBlank() && !salvando) aoSalvar(nome.trim(), dosagem.trim(), horario.trim(), alarmeAtivo)
                         },
                         modifier = Modifier
                             .fillMaxWidth()

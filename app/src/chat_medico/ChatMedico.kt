@@ -68,6 +68,7 @@ import home_page.branco
 import home_page.ExameEnviado
 import home_page.fundoPrincipal
 import home_page.ApiAda
+import home_page.BotaoSetaAplicativo
 import home_page.TipografiaAplicativo
 import home_page.textoPrimario
 import home_page.textoSecundario
@@ -100,9 +101,8 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlin.coroutines.cancellation.CancellationException
 
-const val URL_BASE_OLLAMA = "http://10.0.2.2:11434"
-private const val CAMINHO_CHAT_OLLAMA = "/api/chat"
-private const val MODELO_OLLAMA = "medgemma1.5:4b"
+const val URL_BASE_CHAT = "http://127.0.0.1:8080"
+private const val CAMINHO_CHAT = "/api/chat-medico"
 private const val LIMITE_MENSAGEM = 2000
 private const val LIMITE_IMAGEM_BYTES = 10 * 1024 * 1024
 private const val TEXTO_AVISO = "Este chat fornece informações educativas e não substitui avaliação de um profissional de saúde."
@@ -112,7 +112,6 @@ private const val TEXTO_ERRO_TAMANHO = "Mensagem muito longa. Resuma sua dúvida
 private const val TEXTO_CARREGANDO = "Ada está preparando uma resposta educativa..."
 private const val TEXTO_ANALISAR_EXAME = "Explique os dados visíveis neste exame em linguagem simples."
 private const val TEXTO_ERRO_IMAGEM = "Não foi possível carregar esta imagem. Escolha um arquivo de até 10 MB."
-private val ConversorResposta = Json { ignoreUnknownKeys = true }
 
 enum class PapelMensagem { USUARIO, ASSISTENTE }
 enum class TipoRespostaMedica { EDUCATIVO, URGENCIA, RECUSA_SEGURA, ERRO }
@@ -151,101 +150,41 @@ data class EstadoChatMedico(
 )
 
 @Serializable
-private data class PedidoOllama(
-    val model: String,
-    val stream: Boolean,
-    val format: String,
-    val messages: List<MensagemOllama>,
-    val options: OpcoesOllama
-)
+private data class PedidoChat(val mensagem: String, val imagemBase64: String? = null)
 
 @Serializable
-private data class MensagemOllama(
-    val role: String,
-    val content: String,
-    val images: List<String>? = null
-)
-
-@Serializable
-private data class OpcoesOllama(
-    val temperature: Double,
-    @kotlinx.serialization.SerialName("num_predict") val numPredict: Int,
-    @kotlinx.serialization.SerialName("repeat_penalty") val repeatPenalty: Double
-)
-
-@Serializable
-private data class RespostaOllama(val message: MensagemOllama? = null)
-
-@Serializable
-private data class ConteudoResposta(val resposta: String)
+private data class RespostaChat(val resposta: String, val tipo: String)
 
 interface RepositorioChatMedico {
     suspend fun enviarMensagem(mensagem: String, imagemBase64: String? = null): RespostaChatMedico
 }
 
-class RepositorioChatMedicoOllama(
-    private val urlBase: String = URL_BASE_OLLAMA,
+class RepositorioChatMedicoApi(
+    private val urlBase: String = URL_BASE_CHAT,
     private val cliente: HttpClient = criarClienteHttp()
 ) : RepositorioChatMedico {
     override suspend fun enviarMensagem(mensagem: String, imagemBase64: String?): RespostaChatMedico {
-        val resposta = cliente.post(urlBase.trimEnd('/') + CAMINHO_CHAT_OLLAMA) {
+        val resposta = cliente.post(urlBase.trimEnd('/') + CAMINHO_CHAT) {
             contentType(ContentType.Application.Json)
-            setBody(
-                PedidoOllama(
-                    model = MODELO_OLLAMA,
-                    stream = false,
-                    format = "json",
-                    messages = listOf(
-                        MensagemOllama("system", PROMPT_MEDICO),
-                        MensagemOllama(
-                            role = "user",
-                            content = mensagem,
-                            images = imagemBase64?.let(::listOf)
-                        )
-                    ),
-                    options = OpcoesOllama(
-                        temperature = 0.1,
-                        numPredict = 300,
-                        repeatPenalty = 1.2
-                    )
-                )
-            )
-        }.body<RespostaOllama>()
+            setBody(PedidoChat(mensagem, imagemBase64))
+        }.body<RespostaChat>()
 
-        val texto = resposta.message?.content.orEmpty().somenteRespostaFinal()
-
+        val tipo = when (resposta.tipo) {
+            "educativo" -> TipoRespostaMedica.EDUCATIVO
+            "urgencia" -> TipoRespostaMedica.URGENCIA
+            "recusa_segura" -> TipoRespostaMedica.RECUSA_SEGURA
+            else -> TipoRespostaMedica.ERRO
+        }
         return RespostaChatMedico(
-            texto = texto.ifBlank { TEXTO_ERRO },
-            tipo = if (texto.isBlank()) TipoRespostaMedica.ERRO else TipoRespostaMedica.EDUCATIVO
+            texto = resposta.resposta.ifBlank { TEXTO_ERRO },
+            tipo = if (resposta.resposta.isBlank()) TipoRespostaMedica.ERRO else tipo
         )
     }
 }
 
-fun criarRepositorioChatMedico(urlBase: String = URL_BASE_OLLAMA): RepositorioChatMedico {
-    return RepositorioChatMedicoOllama(urlBase = urlBase)
+fun criarRepositorioChatMedico(urlBase: String = URL_BASE_CHAT): RepositorioChatMedico {
+    return RepositorioChatMedicoApi(urlBase = urlBase)
 }
-
-private fun String.somenteRespostaFinal(): String {
-    val conteudoLimpo = substringAfterLast("<unused95>", this)
-        .replace("<unused\\d+>".toRegex(), "")
-        .trim()
-    return runCatching {
-        ConversorResposta.decodeFromString<ConteudoResposta>(conteudoLimpo).resposta
-    }.getOrDefault(conteudoLimpo)
-}
-
-private const val PROMPT_MEDICO = """
-Voce e Ada, uma assistente de educacao em saude.
-
-Responda em portugues do Brasil, de forma clara e objetiva. Forneca apenas informacoes gerais e educativas.
-Nao realize diagnosticos, nao prescreva medicamentos, nao indique doses e nao oriente mudancas de tratamento.
-Quando houver sinais de emergencia, recomende atendimento imediato. Em temas de saude, deixe claro que a resposta
-nao substitui a avaliacao de um profissional de saude.
-Ao receber a imagem de um exame, descreva somente o que estiver legivel, explique termos e valores de referencia
-sem concluir diagnosticos e avise quando a qualidade da imagem impedir uma leitura confiavel.
-Nao mostre raciocinio interno e nao repita frases. Responda com no maximo 120 palavras, somente como JSON valido
-no formato {"resposta":"texto final para o usuario"}.
-"""
 
 private fun criarClienteHttp(): HttpClient {
     return HttpClient(OkHttp) {
@@ -468,9 +407,7 @@ private fun ConteudoChatMedico(
             CenterAlignedTopAppBar(
                 title = { Text("Fale com a Ada", style = TipografiaAplicativo.titleLarge) },
                 navigationIcon = {
-                    IconButton(onClick = aoVoltar) {
-                        Text("<", color = textoPrimario, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-                    }
+                    BotaoSetaAplicativo(aoClicar = aoVoltar)
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = fundoPrincipal)
             )

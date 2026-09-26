@@ -232,6 +232,14 @@ private fun CartaoResumoSaude(
             vermelhoPrincipal
         ),
         ItemResumoSaude(
+            "Pressao arterial",
+            if (dadosSaude.pressaoSistolica != null && dadosSaude.pressaoDiastolica != null)
+                "${dadosSaude.pressaoSistolica.toInt()}/${dadosSaude.pressaoDiastolica.toInt()} mmHg"
+            else "-- mmHg",
+            R.drawable.pressao_arterial,
+            verdePrincipal
+        ),
+        ItemResumoSaude(
             "Sono",
             dadosSaude.sonoMinutos?.let { minutos -> "${minutos / 60}h ${minutos % 60}m" } ?: "--",
             R.drawable.night,
@@ -285,12 +293,13 @@ private fun CartaoResumoSaude(
                 }
             }
             Spacer(Modifier.height(14.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                itensResumo.forEach { item ->
-                    CartaoItemSaude(
-                        item = item,
-                        modifier = Modifier.weight(1f)
-                    )
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                itensResumo.chunked(2).forEach { linha ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        linha.forEach { item ->
+                            CartaoItemSaude(item = item, modifier = Modifier.weight(1f))
+                        }
+                    }
                 }
             }
         }
@@ -377,12 +386,7 @@ private fun CartaoAdaAi(aoAbrirChatMedico: () -> Unit) {
                         lineHeight = 18.sp
                     )
                     Spacer(Modifier.weight(1f))
-                    Text(
-                        text = ">",
-                        color = branco,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp
-                    )
+                    SetaAplicativo()
                 }
                 Text(
                     text = "Tire suas dúvidas com a Ada AI, nosso chat bot de saúde personalizado para você",
@@ -431,7 +435,8 @@ private fun BlocoAcoesRapidas(
         ItemAcaoRapida("Emergência", R.drawable.emergencia, vermelhoPrincipal, aoAbrirEmergencia),
         ItemAcaoRapida("Hidratação", R.drawable.agua, azulPrincipal, aoAbrirHidratacao),
         ItemAcaoRapida("Exercícios", R.drawable.exercicios, verdePrincipal, aoAbrirExercicios),
-        ItemAcaoRapida("Metas", R.drawable.metas, verdePrincipal, aoAbrirMetas)
+        ItemAcaoRapida("Metas", R.drawable.metas, verdePrincipal, aoAbrirMetas),
+        ItemAcaoRapida("Recompensas", R.drawable.trofeu, amareloPrincipal, LocalAbrirRecompensas.current)
     )
 
     Surface(

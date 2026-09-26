@@ -17,9 +17,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,11 +43,15 @@ enum class ItemBarraInferior {
     MONITORAR,
     EXAMES,
     PERFIL,
+    RECOMPENSAS,
     NENHUM
 }
 
 // Mantém o acesso ao perfil em todas as telas que usam o menu compartilhado.
 val LocalAbrirPerfil = staticCompositionLocalOf<() -> Unit> { {} }
+val LocalAbrirMonitorar = staticCompositionLocalOf<() -> Unit> { {} }
+val LocalAbrirRecompensas = staticCompositionLocalOf<() -> Unit> { {} }
+val LocalAbrirMetas = staticCompositionLocalOf<() -> Unit> { {} }
 
 private data class ItemMenuPadrao(
     val titulo: String,
@@ -55,16 +65,19 @@ private data class ItemMenuPadrao(
 fun BarraInferiorPadrao(
     itemSelecionado: ItemBarraInferior,
     aoAbrirInicio: () -> Unit = {},
-    aoAbrirMonitorar: () -> Unit = {},
-    aoAdicionar: () -> Unit = {},
+    aoAbrirMonitorar: () -> Unit = LocalAbrirMonitorar.current,
+    aoAdicionar: () -> Unit = LocalAbrirMetas.current,
     aoAbrirExames: () -> Unit = {},
     aoAbrirPerfil: () -> Unit = LocalAbrirPerfil.current
 ) {
+    var menuAberto by rememberSaveable { mutableStateOf(false) }
+    val abrirRecompensas = LocalAbrirRecompensas.current
+    val abrirMetas = LocalAbrirMetas.current
     val itensMenu = listOf(
         ItemMenuPadrao("Inicio", R.drawable.house_building, itemSelecionado == ItemBarraInferior.INICIO, aoClicar = aoAbrirInicio),
         ItemMenuPadrao("Monitorar", R.drawable.arrow, itemSelecionado == ItemBarraInferior.MONITORAR, aoClicar = aoAbrirMonitorar),
         ItemMenuPadrao("Exames", R.drawable.list, itemSelecionado == ItemBarraInferior.EXAMES, aoClicar = aoAbrirExames),
-        ItemMenuPadrao("Perfil", R.drawable.user, itemSelecionado == ItemBarraInferior.PERFIL, redondo = true, aoClicar = aoAbrirPerfil)
+        ItemMenuPadrao("Menu", R.drawable.ic_menu, menuAberto || itemSelecionado in setOf(ItemBarraInferior.PERFIL, ItemBarraInferior.RECOMPENSAS), aoClicar = { menuAberto = true })
     )
 
     Surface(
@@ -100,7 +113,26 @@ fun BarraInferiorPadrao(
                 }
             }
             BotaoBarraInferior(itensMenu[2], Modifier.weight(1f))
-            BotaoBarraInferior(itensMenu[3], Modifier.weight(1f))
+            Box(Modifier.weight(1f)) {
+                BotaoBarraInferior(itensMenu[3], Modifier.fillMaxWidth())
+                DropdownMenu(expanded = menuAberto, onDismissRequest = { menuAberto = false }, containerColor = branco) {
+                    DropdownMenuItem(
+                        text = { Text("Meu perfil") },
+                        leadingIcon = { Image(painterResource(R.drawable.user), null, Modifier.size(24.dp)) },
+                        onClick = { menuAberto = false; aoAbrirPerfil() }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Metas & Hábitos") },
+                        leadingIcon = { Image(painterResource(R.drawable.metas), null, Modifier.size(24.dp)) },
+                        onClick = { menuAberto = false; abrirMetas() }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Recompensas") },
+                        leadingIcon = { Image(painterResource(R.drawable.trofeu), null, Modifier.size(24.dp)) },
+                        onClick = { menuAberto = false; abrirRecompensas() }
+                    )
+                }
+            }
         }
     }
 }

@@ -161,7 +161,7 @@ fun TelaMetas(
         bottomBar = {
             BarraInferiorPadrao(
                 itemSelecionado = ItemBarraInferior.NENHUM,
-                aoAbrirInicio = aoVoltar, aoAbrirMonitorar = aoAtualizarPassos,
+                aoAbrirInicio = aoVoltar,
                 aoAdicionar = { if (pronto && !salvando) editarMetas = true },
                 aoAbrirExames = aoAbrirExames
             )
@@ -173,9 +173,7 @@ fun TelaMetas(
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             Row(Modifier.fillMaxWidth().statusBarsPadding(), verticalAlignment = Alignment.CenterVertically) {
-                TextButton(onClick = aoVoltar, contentPadding = PaddingValues(0.dp), modifier = Modifier.size(48.dp).semantics { contentDescription = "Voltar ao início" }) {
-                    Text("‹", fontSize = 32.sp, color = verdePrincipal)
-                }
+                BotaoSetaAplicativo(aoClicar = aoVoltar, descricao = "Voltar ao início")
                 Text("METAS & HÁBITOS", Modifier.weight(1f), color = verdePrincipal,
                     style = TipografiaAplicativo.titleMedium, textAlign = TextAlign.Center, fontWeight = FontWeight.Bold)
                 Image(painterResource(R.drawable.metas), null, Modifier.padding(12.dp).size(24.dp))
@@ -190,58 +188,16 @@ fun TelaMetas(
                     }
                 }
             }
-            if (carregando) LinearProgressIndicator(Modifier.fillMaxWidth(), color = verdePrincipal)
-            erro?.let { mensagem ->
-                Surface(color = vermelhoClaro, shape = RoundedCornerShape(12.dp)) {
-                    Column(Modifier.padding(12.dp)) {
-                        Text(mensagem, color = vermelhoPrincipal, style = TipografiaAplicativo.bodySmall)
-                        TextButton(onClick = { atualizacao++ }, enabled = !salvando && !carregando) { Text("Tentar novamente") }
-                    }
-                }
-            }
-            if (aba == 0) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Minhas metas", Modifier.weight(1f), style = TipografiaAplicativo.titleSmall, fontWeight = FontWeight.Bold)
-                    TextButton(onClick = { editarMetas = true }, enabled = pronto && !salvando) { Text("Editar metas", color = verdePrincipal) }
-                }
-                CartaoMeta("Beber ${litrosMeta(metas.aguaMl)} de água", "${aguaMl?.let(::litrosMeta) ?: "—"} / ${litrosMeta(metas.aguaMl)} hoje",
-                    R.drawable.agua, azulPrincipal, aguaMl?.toFloat(), metas.aguaMl.toFloat(), "Adicionar água", pronto && !salvando) { registrarAgua = true }
-                CartaoMeta("Dar ${numeroMeta(metas.passos)} passos", "${passosHoje?.let(::numeroMeta) ?: "—"} / ${numeroMeta(metas.passos)} hoje",
-                    R.drawable.sapato, verdePrincipal, passosHoje?.toFloat(), metas.passos.toFloat(), "Atualizar passos", !salvando, aoAtualizarPassos)
-                Text("Passos registrados pelo Health Connect. Toque em Atualizar passos para conectar ou sincronizar.",
-                    color = textoSecundario, style = TipografiaAplicativo.bodySmall)
-                Text(statusPassos, color = verdePrincipal, style = TipografiaAplicativo.bodySmall)
-                val inicioAtual = hoje.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-                val totalAtual = (0L..6L).count { inicioAtual.plusDays(it).toString() in diasConcluidos }
-                CartaoMeta("Treinar ${metas.treinosSemana}x por semana", "${if (treinos == null) "—" else totalAtual} / ${metas.treinosSemana} treinos nesta semana",
-                    R.drawable.treino, roxoPrincipal, if (treinos == null) null else totalAtual.toFloat(), metas.treinosSemana.toFloat(), "Ver treino de hoje", !salvando, aoAbrirTreino)
-            } else {
-                Text("Sua constância", style = TipografiaAplicativo.titleMedium, fontWeight = FontWeight.Bold)
-                Text("Acompanhe os treinos concluídos a cada semana. A comparação usa sua meta semanal atual.",
-                    color = textoSecundario, style = TipografiaAplicativo.bodySmall)
-                (0L..3L).forEach { semana ->
-                    val inicio = hoje.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).minusWeeks(semana)
-                    val total = (0L..6L).count { inicio.plusDays(it).toString() in diasConcluidos }
-                    CartaoMeta("${dataMeta(inicio)} – ${dataMeta(inicio.plusDays(6))}",
-                        "${if (treinos == null) "—" else total} / ${metas.treinosSemana} treinos", R.drawable.treino,
-                        roxoPrincipal, if (treinos == null) null else total.toFloat(), metas.treinosSemana.toFloat(), "Ver semana", pronto) { semanasAtras = semana.toInt() }
-                }
-            }
             Text("Hábitos diários", style = TipografiaAplicativo.titleSmall, fontWeight = FontWeight.Bold)
             Surface(color = branco, shape = RoundedCornerShape(16.dp), border = BorderStroke(1.dp, borda)) {
                 Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        TextButton(onClick = { semanasAtras++ }, enabled = !salvando,
-                            modifier = Modifier.semantics { contentDescription = "Semana anterior" }) { Text("‹", fontSize = 24.sp) }
+                        BotaoSetaAplicativo(aoClicar = { semanasAtras++ }, habilitado = !salvando,
+                            descricao = "Semana anterior")
                         Text("${dataMeta(inicioSemana)} – ${dataMeta(inicioSemana.plusDays(6))}", Modifier.weight(1f),
                             textAlign = TextAlign.Center, style = TipografiaAplicativo.labelMedium)
-                        TextButton(onClick = { semanasAtras-- }, enabled = semanasAtras > 0 && !salvando,
-                            modifier = Modifier.semantics { contentDescription = "Próxima semana" }) { Text("›", fontSize = 24.sp) }
-                    }
-                    if (carregandoHabitos) LinearProgressIndicator(Modifier.fillMaxWidth(), color = verdePrincipal)
-                    if (erroHabitos) {
-                        Text("Não foi possível carregar água e passos desta semana.", color = vermelhoPrincipal, style = TipografiaAplicativo.bodySmall)
-                        TextButton(onClick = { tentativaHabitos++ }) { Text("Tentar novamente") }
+                        BotaoSetaAplicativo(aoClicar = { semanasAtras-- }, habilitado = semanasAtras > 0 && !salvando,
+                            direcao = DirecaoSeta.AVANCAR, descricao = "Próxima semana")
                     }
                     BoxWithConstraints(Modifier.fillMaxWidth()) {
                         val larguraTabela = maxOf(maxWidth, 350.dp)
@@ -284,12 +240,54 @@ fun TelaMetas(
                             if (tabelaRolavel) Text("Deslize para ver todos os dias →", color = textoSecundario, style = TipografiaAplicativo.labelSmall)
                         }
                     }
+                    if (carregandoHabitos) LinearProgressIndicator(Modifier.fillMaxWidth(), color = verdePrincipal)
+                    if (erroHabitos) {
+                        Text("Não foi possível carregar água e passos desta semana.", color = vermelhoPrincipal, style = TipografiaAplicativo.bodySmall)
+                        TextButton(onClick = { tentativaHabitos++ }) { Text("Tentar novamente") }
+                    }
                     Text("Água e passos são marcados ao atingir a meta diária atual. O círculo mostra o progresso; — indica falta de dados ou um dia futuro.",
                         color = textoSecundario, style = TipografiaAplicativo.bodySmall)
                     Text(if (treinos == null) "Carregue os dados para acompanhar seus treinos."
                         else "$treinosSemana de ${metas.treinosSemana} treinos concluídos. Toque na linha Treinos para marcar ou desmarcar um dia.",
                         color = textoSecundario, style = TipografiaAplicativo.bodySmall)
                     if (salvando) LinearProgressIndicator(Modifier.fillMaxWidth(), color = verdePrincipal)
+                }
+            }
+            if (carregando) LinearProgressIndicator(Modifier.fillMaxWidth(), color = verdePrincipal)
+            erro?.let { mensagem ->
+                Surface(color = vermelhoClaro, shape = RoundedCornerShape(12.dp)) {
+                    Column(Modifier.padding(12.dp)) {
+                        Text(mensagem, color = vermelhoPrincipal, style = TipografiaAplicativo.bodySmall)
+                        TextButton(onClick = { atualizacao++ }, enabled = !salvando && !carregando) { Text("Tentar novamente") }
+                    }
+                }
+            }
+            if (aba == 0) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Minhas metas", Modifier.weight(1f), style = TipografiaAplicativo.titleSmall, fontWeight = FontWeight.Bold)
+                    TextButton(onClick = { editarMetas = true }, enabled = pronto && !salvando) { Text("Editar metas", color = verdePrincipal) }
+                }
+                CartaoMeta("Beber ${litrosMeta(metas.aguaMl)} de água", "${aguaMl?.let(::litrosMeta) ?: "—"} / ${litrosMeta(metas.aguaMl)} hoje",
+                    R.drawable.agua, azulPrincipal, aguaMl?.toFloat(), metas.aguaMl.toFloat(), "Adicionar água", pronto && !salvando) { registrarAgua = true }
+                CartaoMeta("Dar ${numeroMeta(metas.passos)} passos", "${passosHoje?.let(::numeroMeta) ?: "—"} / ${numeroMeta(metas.passos)} hoje",
+                    R.drawable.sapato, verdePrincipal, passosHoje?.toFloat(), metas.passos.toFloat(), "Atualizar passos", !salvando, aoAtualizarPassos)
+                Text("Passos registrados pelo Health Connect. Toque em Atualizar passos para conectar ou sincronizar.",
+                    color = textoSecundario, style = TipografiaAplicativo.bodySmall)
+                Text(statusPassos, color = verdePrincipal, style = TipografiaAplicativo.bodySmall)
+                val inicioAtual = hoje.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+                val totalAtual = (0L..6L).count { inicioAtual.plusDays(it).toString() in diasConcluidos }
+                CartaoMeta("Treinar ${metas.treinosSemana}x por semana", "${if (treinos == null) "—" else totalAtual} / ${metas.treinosSemana} treinos nesta semana",
+                    R.drawable.treino, roxoPrincipal, if (treinos == null) null else totalAtual.toFloat(), metas.treinosSemana.toFloat(), "Ver treino de hoje", !salvando, aoAbrirTreino)
+            } else {
+                Text("Sua constância", style = TipografiaAplicativo.titleMedium, fontWeight = FontWeight.Bold)
+                Text("Acompanhe os treinos concluídos a cada semana. A comparação usa sua meta semanal atual.",
+                    color = textoSecundario, style = TipografiaAplicativo.bodySmall)
+                (0L..3L).forEach { semana ->
+                    val inicio = hoje.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).minusWeeks(semana)
+                    val total = (0L..6L).count { inicio.plusDays(it).toString() in diasConcluidos }
+                    CartaoMeta("${dataMeta(inicio)} – ${dataMeta(inicio.plusDays(6))}",
+                        "${if (treinos == null) "—" else total} / ${metas.treinosSemana} treinos", R.drawable.treino,
+                        roxoPrincipal, if (treinos == null) null else total.toFloat(), metas.treinosSemana.toFloat(), "Ver semana", pronto) { semanasAtras = semana.toInt() }
                 }
             }
             Surface(color = verdeClaro, shape = RoundedCornerShape(14.dp)) {

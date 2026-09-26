@@ -106,15 +106,7 @@ fun TelaExercicios(
 @Composable
 private fun CabecalhoExercicios(aoVoltar: () -> Unit) {
     Box(Modifier.fillMaxWidth().statusBarsPadding().height(58.dp)) {
-        Surface(
-            modifier = Modifier.size(38.dp).align(Alignment.CenterStart).clickable(onClick = aoVoltar),
-            shape = CircleShape,
-            color = verdeClaro
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Text("‹", color = verdePrincipal, fontSize = 32.sp, lineHeight = 32.sp)
-            }
-        }
+        BotaoSetaAplicativo(aoClicar = aoVoltar, modifier = Modifier.align(Alignment.CenterStart))
         Text(
             "EXERCÍCIOS",
             modifier = Modifier.align(Alignment.Center),
@@ -245,7 +237,7 @@ private fun BotaoIniciarTreino(aoClicar: () -> Unit) {
                 Text("Iniciar treino", color = textoPrimario, style = TipografiaAplicativo.titleSmall)
                 Text("Abra seu treino personalizado de hoje", color = textoSecundario, style = TipografiaAplicativo.bodySmall)
             }
-            Text("›", color = verdePrincipal, fontSize = 27.sp)
+            SetaAplicativo()
         }
     }
 }
