@@ -29,3 +29,8 @@ dependencies {
 tasks.test {
     useJUnitPlatform()
 }
+
+// Configuracoes privadas nunca devem integrar o JAR ou a distribuicao.
+tasks.processResources {
+    exclude("**/database.properties", "**/.env", "**/.env.*")
+}

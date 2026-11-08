@@ -12,14 +12,12 @@ import io.ktor.serialization.kotlinx.json.json
 import java.util.Base64
 import kotlinx.serialization.json.*
 
-// Coloque sua chave da API da OpenAI aqui, somente no backend.
-private const val OPENAI_API_KEY = "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"
 private const val MODELO_OPENAI = "gpt-4.1-mini"
 private const val URL_OPENAI = "https://api.openai.com/v1/responses"
 private const val LIMITE_IMAGEM_BYTES = 10 * 1024 * 1024
 
 internal class ClienteOpenAI(
-    private val chave: String = OPENAI_API_KEY,
+    private val chave: String = System.getenv("OPENAI_API_KEY").orEmpty(),
     private val cliente: HttpClient = HttpClient(CIO) {
         expectSuccess = true
         install(ContentNegotiation) { json() }
@@ -31,7 +29,7 @@ internal class ClienteOpenAI(
     }
 ) {
     suspend fun responder(mensagem: String, imagemBase64: String? = null): String {
-        check(chave.isNotBlank()) { "Preencha OPENAI_API_KEY no backend para habilitar o chat." }
+        check(chave.isNotBlank()) { "Configure a variavel de ambiente OPENAI_API_KEY no backend para habilitar o chat." }
         val pedido = buildJsonObject {
             put("model", MODELO_OPENAI)
             put("instructions", PROMPT_MEDICO)

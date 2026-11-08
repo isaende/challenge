@@ -1,11 +1,11 @@
 # Configurar o chat
 
-1. Preencha a constante `OPENAI_API_KEY` em `src/main/kotlin/ClienteOpenAI.kt` com sua chave da API da OpenAI. Mantenha a chave somente no backend e não publique seu valor no Git.
-2. Na raiz do projeto, execute `./gradlew.bat :backend:run` (Windows) ou `./gradlew :backend:run`.
-3. Inicie o aplicativo. No emulador Android, o chat acessa `http://10.0.2.2:8080/api/chat-medico`. Para um dispositivo físico, ajuste `URL_BASE_CHAT` em `app/src/chat_medico/ChatMedico.kt` para o endereço do computador que executa o backend.
+Defina `OPENAI_API_KEY` como variável de ambiente do processo que executa o backend. A chave permanece no servidor. Consulte o [README](../README.md) para configurar o banco e executar o projeto.
 
-O backend usa a API Responses da OpenAI e o modelo definido em `MODELO_OPENAI` (`gpt-4.1-mini`). Texto e imagens de exames são enviados pelo backend; a chave não integra o aplicativo Android. Imagens aceitas: PNG, JPEG, WEBP e GIF, até 10 MB.
+Na raiz, execute `./gradlew.bat :backend:run` no Windows ou `./gradlew :backend:run` no Linux e macOS. Sem a chave, as chamadas ao chat retornam a mensagem de indisponibilidade; as demais rotas continuam disponíveis conforme a configuração do banco.
 
-Referência: [documentação oficial da API](https://developers.openai.com/api/docs/guides/text).
+O aplicativo usa `http://127.0.0.1:8080`. Para desenvolvimento por USB ou emulador, execute `adb reverse tcp:8080 tcp:8080`. Para usar o endereço de rede do computador, ajuste `URL_BASE_CHAT` em `app/src/chat_medico/ChatMedico.kt` e `URL_API_ADA` em `app/src/telas/ApiAda.kt`.
 
-Os testes `./gradlew.bat :backend:test` usam respostas simuladas e não precisam de uma chave real.
+O backend usa a API Responses e o modelo definido em `MODELO_OPENAI`. Aceita imagens PNG, JPEG, WEBP e GIF de até 10 MB. A chave não integra o aplicativo Android.
+
+Os testes `./gradlew.bat :backend:test` usam respostas simuladas e dispensam uma chave real.

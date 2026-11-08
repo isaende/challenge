@@ -3,34 +3,23 @@ package factory
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.PreparedStatement
-import java.util.Properties
 
 object ConnectionFactory {
-    private val propriedades: Properties by lazy {
-        Properties().apply {
-            ConnectionFactory::class.java.classLoader
-                .getResourceAsStream("database.properties")
-                ?.use(::load)
-        }
-    }
-
-    private fun configuracao(variavel: String, propriedade: String): String =
+    private fun configuracao(variavel: String): String =
         System.getenv(variavel)?.takeIf(String::isNotBlank)
-            ?: propriedades.getProperty(propriedade)?.takeIf(String::isNotBlank)
-            ?: error("Configure $variavel ou $propriedade em database.properties")
+            ?: error("Configure a variavel de ambiente $variavel no backend")
 
     init {
         DriverManager.setLoginTimeout(
             System.getenv("DB_CONNECT_TIMEOUT_SECONDS")?.toIntOrNull()
-                ?: propriedades.getProperty("database.connectTimeoutSeconds")?.toIntOrNull()
                 ?: 10
         )
     }
 
     fun getConnection(): Connection = DriverManager.getConnection(
-        configuracao("DB_URL", "database.url"),
-        configuracao("DB_USER", "database.user"),
-        configuracao("DB_PASSWORD", "database.password")
+        configuracao("DB_URL"),
+        configuracao("DB_USER"),
+        configuracao("DB_PASSWORD")
     )
 
     fun testarConexao() {
